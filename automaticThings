@@ -1,1 +1,4 @@
 - Subir y obtener la url del defautl profile image
+- [APP_NAME] Reemplazar app name en strings.xml y en Info.plis
+- [GOOGLE] Obtener el REVERSED_CLIENT_ID del json de google y agregarlo en Info.plist
+- [FACEBOOK] Revisar si estan seteados las keys de facebook e reeplazarlas en strings.xml y en Info.plist y descomentar el facebook en Andorid Manifest y en pubspec.yaml

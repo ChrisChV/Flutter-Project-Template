@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
-import 'package:flutter_project_template/models/user.dart';
+import 'package:flutter_project_template/models/UserModel.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
 import 'package:flutter_project_template/services/DocumentService.dart';
 import 'package:flutter_project_template/utils/constants/StorageConstants.dart';
@@ -14,7 +14,7 @@ import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:tuple/tuple.dart';
 
-class UserController{
+class UserRepository{
 
   static final CollectionReference _collectionReference =
             Firestore.instance.collection(FirestoreCollections.USER_COLLECTION);
@@ -23,12 +23,12 @@ class UserController{
                       .child(StorageConstants.IMAGES_DIRECTORY_NAME)
                       .child(StorageConstants.USER_DIRECTORY_NAME);
 
-  static Future<UserModel> getUser(FirebaseUser user, {bool cache = false}) async{
+  static Future<UserModel> getUserFromCredentials(FirebaseUser user, {bool cache = false}) async{
     DocumentSnapshot userDoc = await DocumentService.getDoc(
         _collectionReference.document(user.uid),
         cache);
     if(!userDoc.exists) return null;
-    return await getByDocSnap(userDoc, user: user);
+    return getByDocSnap(userDoc, user: user);
   }
 
   static UserModel getByDocSnap(DocumentSnapshot docSnap,
@@ -42,8 +42,8 @@ class UserController{
     );
   }
 
-  static Future<Tuple2<UserModel, bool>> getCreateUser(FirebaseUser user,
-                      {int loginType = TypesConstants.EMAIL_LOGIN_TYPE}) async{
+  static Future<Tuple2<UserModel, FirstLogin>> getCreateUser(FirebaseUser user,
+                      {LoginType loginType = LoginType.EMAIL_LOGIN_TYPE}) async{
     DocumentReference docRef = _collectionReference.document(user.uid);
     DocumentSnapshot docSnap = await DocumentService.getDoc(
         docRef, false, forceServer: true);
@@ -53,17 +53,17 @@ class UserController{
       String photoUrlBig;
       String photoUrl;
       switch(loginType){
-        case TypesConstants.EMAIL_LOGIN_TYPE: {
+        case LoginType.EMAIL_LOGIN_TYPE: {
           photoUrl = AppConfiguration.DEFAULT_PROFILE_IMAGE;
           photoUrlBig = AppConfiguration.DEFAULT_BIG_PROFILE_IMAGE;
           break;
         }
-        case TypesConstants.GMAIL_LOGIN_TYPE: {
+        case LoginType.GMAIL_LOGIN_TYPE: {
           photoUrl = Utils.getGmailProfileUrl(user.photoUrl, false);
           photoUrlBig = Utils.getGmailProfileUrl(user.photoUrl, true);
           break;
         }
-        case TypesConstants.FACEBOOK_LOGIN_TYPE: {
+        case LoginType.FACEBOOK_LOGIN_TYPE: {
           photoUrl = Utils.getFacebookProfileUrl(user.photoUrl, false);
           photoUrlBig = Utils.getFacebookProfileUrl(user.photoUrl, true);
           break;
@@ -75,7 +75,7 @@ class UserController{
       }
       File profileFile = await Utils.getImageFromUrl(user.uid, photoUrl);
       File profileBigFile = await Utils.getImageFromUrl(user.uid + '_big', photoUrlBig);
-      Tuple2<String, String> urls = await UserController._updateProfileImages(user.uid, profileFile, profileBigFile);
+      Tuple2<String, String> urls = await UserRepository._updateProfileImages(user.uid, profileFile, profileBigFile);
 
       await docRef.setData({
         'name': user.displayName,
@@ -84,16 +84,19 @@ class UserController{
       });
     }
     UserModel resUser = getByDocSnap(docSnap, user: user);
-    return Tuple2<UserModel, bool>(resUser, firstLogin);
+    return Tuple2<UserModel, FirstLogin>(
+        resUser,
+        firstLogin ? FirstLogin.FALSE : FirstLogin.TRUE,
+    );
   }
 
-  static Future<void> updateUser({String name,
+  static Future<void> updateUser(String userId,
+                                  {String name,
                                   File profileImage}) async{
     if(!AuthService.isLoggedIn()) return;
     Map<String, dynamic> data = Map();
     if(name != null) {
       data['name'] = name;
-      AuthService.appUser.name = name;
     }
     if(profileImage != null){
       //TODO
@@ -104,7 +107,7 @@ class UserController{
        */
     }
     if(data.isNotEmpty){
-      DocumentReference userRef = _collectionReference.document(AuthService.appUser.id);
+      DocumentReference userRef = _collectionReference.document(userId);
       userRef.updateData(data);
     }
   }
@@ -132,6 +135,17 @@ class UserController{
     _collectionReference.document(uid)
         .collection(FirestoreCollections.USER_DEVICES_COLLECTION)
         .document(deviceId).delete();
+  }
+
+  static Future<List<String>> getDevicesTokens(String uid) async{
+    List<String> res = List();
+    CollectionReference ref = _collectionReference.document(uid).collection(FirestoreCollections.USER_DEVICES_COLLECTION);
+    QuerySnapshot query = await DocumentService.getAll(ref, false, forceServer: true);
+    if(query == null) return res;
+    for(DocumentSnapshot doc in query.documents){
+      res.add(doc['fcmToken']);
+    }
+    return res;
   }
 
   static Future<Tuple2<String, String>> _updateProfileImages(String uid, File profile, File profileBig) async{

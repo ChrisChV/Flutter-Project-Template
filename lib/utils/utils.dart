@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_project_template/utils/constants/SizesConstants.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
@@ -52,6 +53,10 @@ class Utils{
     final response = await http.get(url);
     await resFile.writeAsBytes(response.bodyBytes);
     return resFile;
+  }
+
+  static bool isOnRelease(){
+    return kReleaseMode;
   }
 
 }
