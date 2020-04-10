@@ -1,5 +1,5 @@
 import 'package:flutter_project_template/models/UserModel.dart';
-import 'package:flutter_project_template/utils/constants/TypesConstants.dart';
+import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
 
 abstract class AppUserNotifierInterface{
 

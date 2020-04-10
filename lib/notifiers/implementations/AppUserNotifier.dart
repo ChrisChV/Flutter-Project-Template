@@ -5,7 +5,8 @@ import 'package:flutter_project_template/notifiers/interfaces/AppUserNotifierInt
 import 'package:flutter_project_template/repositories/UserRepository.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
-import 'package:flutter_project_template/utils/constants/TypesConstants.dart';
+import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
+import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 import 'package:flutter_project_template/utils/exceptions/LoginExceptions.dart';
 import 'package:tuple/tuple.dart';
 

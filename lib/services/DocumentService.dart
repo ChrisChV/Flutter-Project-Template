@@ -5,6 +5,7 @@ class DocumentService{
 
   static Future<DocumentSnapshot> getDoc(
       DocumentReference docRef, bool cache, {bool forceServer = false}) async{
+    if(Utils.isOnTest()) return docRef.get();
     Source source = Source.serverAndCache;
     bool networkFlag = await Utils.checkNetwork();
     if(cache || !networkFlag){
@@ -16,6 +17,7 @@ class DocumentService{
 
   static Future<QuerySnapshot> getAll(
       CollectionReference collRef, bool cache, {bool forceServer = false}) async{
+    if(Utils.isOnTest()) return collRef.getDocuments();
     Source source = Source.serverAndCache;
     bool networkFlag = await Utils.checkNetwork();
     if(cache || !networkFlag){
@@ -26,6 +28,7 @@ class DocumentService{
   }
 
   static Future<QuerySnapshot> runQuery(Query query, bool cache, {bool forceServer = false}) async{
+    if(Utils.isOnTest()) return query.getDocuments();
     Source source = Source.serverAndCache;
     bool networkFlag = await Utils.checkNetwork();
     if(cache || !networkFlag){

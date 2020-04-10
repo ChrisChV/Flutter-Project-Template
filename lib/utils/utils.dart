@@ -59,4 +59,8 @@ class Utils{
     return kReleaseMode;
   }
 
+  static bool isOnTest(){
+    return Platform.environment.containsKey('FLUTTER_TEST');
+  }
+
 }

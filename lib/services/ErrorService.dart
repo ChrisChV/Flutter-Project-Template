@@ -1,5 +1,6 @@
 import 'package:catcher/catcher_plugin.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
+import 'package:flutter_project_template/utils/utils.dart';
 import 'package:sentry/sentry.dart';
 
 class ErrorService{
@@ -14,6 +15,7 @@ class ErrorService{
       throw(error);
     }
     catch(_error, stacktrace){
+      if(Utils.isOnTest()) throw(error);
       Catcher.reportCheckedError(error, stacktrace);
     }
   }

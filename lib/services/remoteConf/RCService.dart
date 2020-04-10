@@ -1,7 +1,8 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter_project_template/services/remoteConf/KeyNames.dart';
 import 'package:flutter_project_template/services/remoteConf/default_values.dart';
 import 'package:flutter_project_template/utils/constants/TimeConstants.dart';
-import 'package:flutter_project_template/utils/constants/TypesConstants.dart';
+import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
 import 'package:flutter_project_template/utils/utils.dart';
 
 class RCService{
@@ -20,6 +21,7 @@ class RCService{
   }
 
   static dynamic get(String keyName, RCType rcType){
+    if(Utils.isOnTest()) return RCDefault.defaults[KeyNames];
     switch(rcType){
       case RCType.STRING:
         return _remoteConfig.getString(keyName);

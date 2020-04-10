@@ -7,9 +7,11 @@ import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
 import 'package:flutter_project_template/services/DocumentService.dart';
-import 'package:flutter_project_template/utils/constants/StorageConstants.dart';
-import 'package:flutter_project_template/utils/constants/TypesConstants.dart';
-import 'package:flutter_project_template/utils/constants/FirestoreConstants.dart';
+import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
+import 'package:flutter_project_template/utils/constants/storage/StorageConstants.dart';
+import 'package:flutter_project_template/utils/constants/firestore/FirestoreConstants.dart';
+import 'package:flutter_project_template/utils/constants/firestore/collections/Devices.dart';
+import 'package:flutter_project_template/utils/constants/firestore/collections/User.dart';
 import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:tuple/tuple.dart';
@@ -35,9 +37,9 @@ class UserRepository{
                                       {FirebaseUser user}){
     return UserModel(
       id: docSnap.documentID,
-      name: docSnap['name'],
-      photoUrl: docSnap['photoUrl'],
-      photoUrlBig: docSnap['photoUrlBig'],
+      name: docSnap[UserCollectionNames.NAME],
+      photoUrl: docSnap[UserCollectionNames.PHOTO_URL],
+      photoUrlBig: docSnap[UserCollectionNames.PHOTO_URL_BIG],
       firebaseUser: user,
     );
   }
@@ -78,9 +80,9 @@ class UserRepository{
       Tuple2<String, String> urls = await UserRepository._updateProfileImages(user.uid, profileFile, profileBigFile);
 
       await docRef.setData({
-        'name': user.displayName,
-        'photoUrl': urls.item1,
-        'photoUrl_big': urls.item2,
+        UserCollectionNames.NAME: user.displayName,
+        UserCollectionNames.PHOTO_URL: urls.item1,
+        UserCollectionNames.PHOTO_URL_BIG: urls.item2,
       });
     }
     UserModel resUser = getByDocSnap(docSnap, user: user);
@@ -125,8 +127,8 @@ class UserRepository{
     _collectionReference.document(uid)
         .collection(FirestoreCollections.USER_DEVICES_COLLECTION)
         .document(deviceId).setData({
-      'fcmToken': null, //TODO
-      'platform': Platform.operatingSystem,
+      DevicesCollectionNames.FCM_TOKEN: null, //TODO
+      DevicesCollectionNames.PLATFORM: Platform.operatingSystem,
     });
   }
 
@@ -143,7 +145,7 @@ class UserRepository{
     QuerySnapshot query = await DocumentService.getAll(ref, false, forceServer: true);
     if(query == null) return res;
     for(DocumentSnapshot doc in query.documents){
-      res.add(doc['fcmToken']);
+      res.add(doc[DevicesCollectionNames.FCM_TOKEN]);
     }
     return res;
   }
