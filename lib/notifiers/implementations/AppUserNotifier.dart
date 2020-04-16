@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
 import 'package:flutter_project_template/notifiers/interfaces/AppUserNotifierInterface.dart';
+import 'package:flutter_project_template/pages/Login.dart';
 import 'package:flutter_project_template/repositories/UserRepository.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
@@ -30,36 +31,48 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   }
 
   @override
-  Future<NotifierState> emailPasswordSignIn(String email, String password) async{
+  Future<LoginState> emailPasswordSignIn(String email, String password) async{
     //TODO verificar errores lanzados por AuthService en todos los singIn
-    if(_appUser != null){
-      ErrorService.sendError(BadLoginException());
-      return NotifierState.ERROR;
+    try{
+      if(_appUser != null){
+        ErrorService.sendError(BadLoginException());
+        return LoginState.ERROR_BAD_LOGIN;
+      }
+      FirebaseUser user = await AuthService.emailPasswordSignIn(email, password);
+      if(user == null) return LoginState.ERROR_BAD_LOGIN;
+      _appUser = await UserRepository.getUserFromCredentials(user);
+      if(_appUser == null){
+        AuthService.signOut();
+        return LoginState.ERROR_BAD_LOGIN;
+      }
+      notifyListeners();
+      return LoginState.SUCCESS;
     }
-    FirebaseUser user = await AuthService.emailPasswordSignIn(email, password);
-    if(user == null) return NotifierState.ERROR;
-    _appUser = await UserRepository.getUserFromCredentials(user);
-    if(_appUser == null){
-      AuthService.signOut();
-      return NotifierState.ERROR;
+    catch(state){
+      if(state.runtimeType == LoginState) return state;
+      ErrorService.sendError(state);
     }
-    notifyListeners();
-    return NotifierState.SUCCESS;
   }
 
   @override
-  Future<NotifierState> googleSignIn() async{
-    if(_appUser != null){
-      ErrorService.sendError(BadLoginException());
-      return NotifierState.ERROR;
+  Future<LoginState> googleSignIn() async{
+    try{
+      if(_appUser != null){
+        ErrorService.sendError(BadLoginException());
+        return LoginState.ERROR_BAD_LOGIN;
+      }
+      FirebaseUser user = await AuthService.googleSignIn();
+      if(user == null) return LoginState.ERROR_BAD_LOGIN;
+      Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
+          user, loginType: LoginType.GMAIL_LOGIN_TYPE);
+      _appUser = result.item1;
+      notifyListeners();
+      return LoginState.SUCCESS;
     }
-    FirebaseUser user = await AuthService.googleSignIn();
-    if(user == null) return NotifierState.ERROR;
-    Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
-        user, loginType: LoginType.GMAIL_LOGIN_TYPE);
-    _appUser = result.item1;
-    notifyListeners();
-    return NotifierState.SUCCESS;
+    catch(state){
+      if(state.runtimeType == LoginState) return state;
+      ErrorService.sendError(state);
+    }
   }
 
   @override

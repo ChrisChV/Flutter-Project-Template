@@ -1,5 +1,6 @@
 import 'package:flutter_project_template/models/UserModel.dart';
 import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
+import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 
 abstract class AppUserNotifierInterface{
 
@@ -7,8 +8,8 @@ abstract class AppUserNotifierInterface{
   UserModel get appUser => _appUser;
 
   Future<NotifierState> initialVerification({bool fromCache = false});
-  Future<NotifierState> emailPasswordSignIn(String email, String password);
-  Future<NotifierState> googleSignIn();
+  Future<LoginState> emailPasswordSignIn(String email, String password);
+  Future<LoginState> googleSignIn();
   Future<NotifierState> signOut();
 
 }
