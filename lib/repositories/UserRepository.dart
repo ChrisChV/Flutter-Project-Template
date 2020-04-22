@@ -84,6 +84,7 @@ class UserRepository{
         UserCollectionNames.PHOTO_URL: urls.item1,
         UserCollectionNames.PHOTO_URL_BIG: urls.item2,
       });
+      docSnap = await DocumentService.getDoc(docRef, false, forceServer: true);
     }
     UserModel resUser = getByDocSnap(docSnap, user: user);
     return Tuple2<UserModel, FirstLogin>(
