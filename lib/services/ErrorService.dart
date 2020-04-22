@@ -23,7 +23,7 @@ class ErrorService{
   static Map<String, CatcherOptions> getCatcherConfig(){
     CatcherOptions debugOptions = CatcherOptions(SilentReportMode(), [ConsoleHandler()]);
     CatcherOptions releaseOptions = CatcherOptions(SilentReportMode(),
-        _sentry != null ?  [ConsoleHandler()] : [ConsoleHandler(), SentryHandler(_sentry),]
+        _sentry == null ?  [ConsoleHandler()] : [ConsoleHandler(), SentryHandler(_sentry),]
     );
     CatcherOptions profileOptions = CatcherOptions(SilentReportMode(), [ConsoleHandler()]);
     return {
