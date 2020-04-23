@@ -15,15 +15,20 @@ class AuthService{
   /// For facebook login, a Facebook App is needed
   //static final facebookLogin = FacebookLogin(); 
 
+  /// Verify if there is a user session is active
   static bool isLoggedIn(){
     return _currentUser != null;
   }
 
+  /// Returns the current user session
   static Future<FirebaseUser> initialVerification({bool cache = false}) async{
     _currentUser = await _auth.currentUser();
     return _currentUser;
   }
 
+  /// Sign Up with email an password
+  ///
+  /// It sends an email verification
   static Future<FirebaseUser> emailPasswordSignUp(
       String email, String password, String name) async {
     try{
@@ -36,13 +41,16 @@ class AuthService{
       info.photoUrl = AppConfiguration.DEFAULT_PROFILE_IMAGE;
       await user.updateProfile(info);
       await user.reload();
-      return await _auth.currentUser();
+      user = await _auth.currentUser();
+      user.sendEmailVerification();
+      return user;
     }
     catch(error){
      throw(_handlerLoginError(error));
     }
   }
 
+  /// Sign in with email and password
   static Future<FirebaseUser> emailPasswordSignIn(String email, String password) async {
     try{
       final FirebaseUser user = (await _auth.signInWithEmailAndPassword(
@@ -56,6 +64,9 @@ class AuthService{
     }
   }
 
+  /// Function that has the functionality of Sign In and Sign Up with Google
+  ///
+  /// With Google, email verification is not necessary.
   static Future<FirebaseUser> googleSignIn() async {
     try{
       final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
@@ -73,27 +84,32 @@ class AuthService{
     }
   }
 
+  /// Function that has the functionality of Sign In and Sign Up with Facebook
   /*
-  static Future<void> facebookSignIn() async{
-    final result = await facebookLogin.logIn(['email']);
-    print(result.errorMessage);
-    final token = result.accessToken.token;
+  static Future<FirebaseUser> facebookSignIn() async{
+    try{
+      final result = await _facebookLogin.logIn(['email']);
+      print(result.errorMessage);
+      final token = result.accessToken.token;
 
-    final AuthCredential credential = FacebookAuthProvider.getCredential(
-      accessToken: token,
-    );
-
-    final FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
-    if(user != null){
-      Tuple2<UserModel, bool> result = await UserController.getCreateUser(
-          user, loginType: TypesConstants.FACEBOOK_LOGIN_TYPE);
-      appUser = result.item1;
-      firstLogin = result.item2;
-      _saveDeviceToken();
+      final AuthCredential credential = FacebookAuthProvider.getCredential(
+        accessToken: token,
+      );
+      FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
+      return user;
+    }
+    catch(error){
+      throw(_handlerLoginError(error));
     }
   }
   */
 
+  /// Sends an email verification to [user]
+  static void sendEmailVerification(FirebaseUser user){
+    user.sendEmailVerification();
+  }
+
+  /// Sign Out the session of the user.
   static Future<void> signOut() async{
     //TODO Device token
     //String pastUid = appUser.id;
@@ -104,6 +120,7 @@ class AuthService{
     _auth.signOut();
   }
 
+  /// Handle all login errors
   static LoginState _handlerLoginError(dynamic error){
     signOut();
     if(error.runtimeType == NoSuchMethodError){

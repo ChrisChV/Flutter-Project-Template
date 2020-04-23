@@ -25,6 +25,9 @@ class UserRepository{
                       .child(StorageConstants.IMAGES_DIRECTORY_NAME)
                       .child(StorageConstants.USER_DIRECTORY_NAME);
 
+  /// Gets an User from a logged FirebaseUser
+  ///
+  /// Set [cache] to true if you want to get the user from cache.
   static Future<UserModel> getUserFromCredentials(FirebaseUser user, {bool cache = false}) async{
     DocumentSnapshot userDoc = await DocumentService.getDoc(
         _collectionReference.document(user.uid),
@@ -33,6 +36,7 @@ class UserRepository{
     return getByDocSnap(userDoc, user: user);
   }
 
+  /// Get a user from a document snapshot
   static UserModel getByDocSnap(DocumentSnapshot docSnap,
                                       {FirebaseUser user}){
     return UserModel(
@@ -44,8 +48,15 @@ class UserRepository{
     );
   }
 
+  /// This function get a user
+  ///
+  /// This function returns a tuple of the user and a value that indicates if
+  /// is the first login of the user or not.
+  /// If the user does not exist in the database, then this function creates it.
+  /// The [loginType] is used to get the image profile, that is different for
+  /// each type of login.
   static Future<Tuple2<UserModel, FirstLogin>> getCreateUser(FirebaseUser user,
-                      {LoginType loginType = LoginType.EMAIL_LOGIN_TYPE}) async{
+      {LoginType loginType = LoginType.EMAIL_LOGIN_TYPE}) async{
     DocumentReference docRef = _collectionReference.document(user.uid);
     DocumentSnapshot docSnap = await DocumentService.getDoc(
         docRef, false, forceServer: true);
@@ -75,9 +86,15 @@ class UserRepository{
           photoUrlBig = user.photoUrl;
           break;
       }
-      File profileFile = await Utils.getImageFromUrl(user.uid, photoUrl);
-      File profileBigFile = await Utils.getImageFromUrl(user.uid + '_big', photoUrlBig);
-      Tuple2<String, String> urls = await UserRepository._updateProfileImages(user.uid, profileFile, profileBigFile);
+      Tuple2<String, String> urls;
+      if(loginType != LoginType.EMAIL_LOGIN_TYPE){
+        File profileFile = await Utils.getImageFromUrl(user.uid, photoUrl);
+        File profileBigFile = await Utils.getImageFromUrl(user.uid + '_big', photoUrlBig);
+        urls = await UserRepository._updateProfileImages(user.uid, profileFile, profileBigFile);
+      }
+      else{
+        urls = Tuple2<String, String>(photoUrl, photoUrlBig);
+      }
 
       await docRef.setData({
         UserCollectionNames.NAME: user.displayName,
@@ -88,11 +105,12 @@ class UserRepository{
     }
     UserModel resUser = getByDocSnap(docSnap, user: user);
     return Tuple2<UserModel, FirstLogin>(
-        resUser,
-        firstLogin ? FirstLogin.FALSE : FirstLogin.TRUE,
+      resUser,
+      firstLogin ? FirstLogin.TRUE : FirstLogin.FALSE,
     );
   }
 
+  /// This function updates a user
   static Future<void> updateUser(String userId,
                                   {String name,
                                   File profileImage}) async{
@@ -114,11 +132,6 @@ class UserRepository{
       userRef.updateData(data);
     }
   }
-
-
-
-
-  //############################################################################
 
 
   static Future<void> updateDevice(String uid) async{
@@ -151,6 +164,7 @@ class UserRepository{
     return res;
   }
 
+  /// This function stores the profile images to Cloud Storage
   static Future<Tuple2<String, String>> _updateProfileImages(String uid, File profile, File profileBig) async{
     String profileFilename = uid + '.jpg';
     String profileBigFilename = uid + '_big.jpg';
