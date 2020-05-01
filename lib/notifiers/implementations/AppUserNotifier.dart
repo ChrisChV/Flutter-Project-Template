@@ -61,7 +61,7 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   ///
   /// It sends and email verification.
   @override
-  Future<LoginState> emailPasswordSingUp(String email, String password, String name) async{
+  Future<LoginState> emailPasswordSignUp(String email, String password, String name) async{
     try{
       if(_appUser != null){
         ErrorService.sendError(BadLoginException());
@@ -72,11 +72,11 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
       Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
           user, loginType: LoginType.EMAIL_LOGIN_TYPE
       );
+      _appUser = result.item1;
       if(_appUser == null){
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      _appUser = result.item1;
       notifyListeners();
       return LoginState.SUCCESS;
     }

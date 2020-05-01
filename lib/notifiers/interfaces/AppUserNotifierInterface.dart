@@ -19,7 +19,7 @@ abstract class AppUserNotifierInterface{
   /// Sign Up with email and password
   ///
   /// It sends and email verification.
-  Future<LoginState> emailPasswordSingUp(String email, String password, String name);
+  Future<LoginState> emailPasswordSignUp(String email, String password, String name);
 
   /// Function that has the functionality of Sign In and Sign Up with Google
   ///

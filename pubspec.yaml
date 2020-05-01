@@ -38,7 +38,7 @@ dependencies:
   tuple: ^1.0.3
   flutter_udid: ^1.0.1
   provider: ^4.0.4
-  catcher: 0.3.0
+  catcher: 0.3.4
   sentry: ^3.0.1
 
 

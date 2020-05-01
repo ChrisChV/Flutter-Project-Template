@@ -11,7 +11,6 @@ import 'package:http/http.dart' as http;
 class FCMService {
   static final FirebaseMessaging _fcm = FirebaseMessaging();
   static StreamSubscription iosSubscription;
-  static final List<String> _notificationsId = List();
 
   static String actualReportId;
   static bool openInbox = false;
