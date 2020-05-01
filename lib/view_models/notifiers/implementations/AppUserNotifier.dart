@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
-import 'package:flutter_project_template/notifiers/interfaces/AppUserNotifierInterface.dart';
+import 'package:flutter_project_template/view_models/notifiers/interfaces/AppUserNotifierInterface.dart';
 import 'package:flutter_project_template/repositories/UserRepository.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
@@ -23,12 +23,13 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   ///
   /// * This function have to be called on start of the app
   @override
-  Future<NotifierState> initialVerification({bool fromCache = false}) async{
+  Future<NotifierState> initialVerification({bool fromCache = false,
+                                              bool notify = true}) async{
     FirebaseUser user = await AuthService.initialVerification();
     if(user == null) return NotifierState.SUCCESS;
     _appUser = await UserRepository.getUserFromCredentials(user, cache: fromCache);
     if(_appUser == null) AuthService.signOut();
-    else notifyListeners();
+    else if(notify) notifyListeners();
     return NotifierState.SUCCESS;
   }
 
