@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
+import 'package:flutter_project_template/utils/utils.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService{
@@ -123,27 +124,54 @@ class AuthService{
   /// Handle all login errors
   static LoginState _handlerLoginError(dynamic error){
     signOut();
-    if(error.runtimeType == NoSuchMethodError){
-      return LoginState.CANCELED_BY_THE_USER;
+    if(Utils.isOnWeb()){
+      if(error.code == null){
+        return LoginState.CANCELED_BY_THE_USER;
+      }
+      print(error.code);
+      switch(error.code){
+        case LoginErrorStringsWeb.ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL:
+          return LoginState.ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL;
+        case LoginErrorStringsWeb.ERROR_EMAIL_ALREADY_IN_USE:
+          return LoginState.ERROR_EMAIL_ALREADY_IN_USE;
+        case LoginErrorStringsWeb.ERROR_NETWORK_REQUEST_FAILED:
+          return LoginState.ERROR_NETWORK_REQUEST_FAILED;
+        case LoginErrorStringsWeb.ERROR_WEAK_PASSWORD:
+          return LoginState.ERROR_WEAK_PASSWORD;
+        case LoginErrorStringsWeb.ERROR_INVALID_EMAIL:
+          return LoginState.ERROR_INVALID_EMAIL;
+        case LoginErrorStringsWeb.ERROR_USER_NOT_FOUND:
+          return LoginState.ERROR_USER_NOT_FOUND;
+        case LoginErrorStringsWeb.ERROR_WRONG_PASSWORD:
+          return LoginState.ERROR_WRONG_PASSWORD;
+        default:
+          ErrorService.sendError(error);
+          return LoginState.UNKNOWN_ERROR;
+      }
     }
-    switch(error.code){
-      case LoginErrorStrings.ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL:
-        return LoginState.ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL;
-      case LoginErrorStrings.ERROR_EMAIL_ALREADY_IN_USE:
-        return LoginState.ERROR_EMAIL_ALREADY_IN_USE;
-      case LoginErrorStrings.ERROR_NETWORK_REQUEST_FAILED:
-        return LoginState.ERROR_NETWORK_REQUEST_FAILED;
-      case LoginErrorStrings.ERROR_WEAK_PASSWORD:
-        return LoginState.ERROR_WEAK_PASSWORD;
-      case LoginErrorStrings.ERROR_INVALID_EMAIL:
-        return LoginState.ERROR_INVALID_EMAIL;
-      case LoginErrorStrings.ERROR_USER_NOT_FOUND:
-        return LoginState.ERROR_USER_NOT_FOUND;
-      case LoginErrorStrings.ERROR_WRONG_PASSWORD:
-        return LoginState.ERROR_WRONG_PASSWORD;
-      default:
-        ErrorService.sendError(error);
-        return LoginState.UNKNOWN_ERROR;
+    else{
+      if(error.runtimeType == NoSuchMethodError){
+        return LoginState.CANCELED_BY_THE_USER;
+      }
+      switch(error.code){
+        case LoginErrorStringsMobile.ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL:
+          return LoginState.ERROR_ACCOUNT_EXISTS_WITH_DIFFERENT_CREDENTIAL;
+        case LoginErrorStringsMobile.ERROR_EMAIL_ALREADY_IN_USE:
+          return LoginState.ERROR_EMAIL_ALREADY_IN_USE;
+        case LoginErrorStringsMobile.ERROR_NETWORK_REQUEST_FAILED:
+          return LoginState.ERROR_NETWORK_REQUEST_FAILED;
+        case LoginErrorStringsMobile.ERROR_WEAK_PASSWORD:
+          return LoginState.ERROR_WEAK_PASSWORD;
+        case LoginErrorStringsMobile.ERROR_INVALID_EMAIL:
+          return LoginState.ERROR_INVALID_EMAIL;
+        case LoginErrorStringsMobile.ERROR_USER_NOT_FOUND:
+          return LoginState.ERROR_USER_NOT_FOUND;
+        case LoginErrorStringsMobile.ERROR_WRONG_PASSWORD:
+          return LoginState.ERROR_WRONG_PASSWORD;
+        default:
+          ErrorService.sendError(error);
+          return LoginState.UNKNOWN_ERROR;
+      }
     }
   }
 

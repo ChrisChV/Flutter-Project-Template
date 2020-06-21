@@ -1,9 +1,10 @@
-import 'package:catcher/catcher_plugin.dart';
+import 'package:catcher/catcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
 import 'package:flutter_project_template/services/FCMService.dart';
 import 'package:flutter_project_template/services/remoteConf/RCService.dart';
 import 'package:flutter_project_template/splashScreen.dart';
+import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_project_template/view_models/notifiers/implementations/AppUserNotifier.dart';
 import 'package:flutter_project_template/view_models/notifiers/implementations/ThemeNotifier.dart';
 import 'package:device_preview/device_preview.dart';
@@ -19,10 +20,17 @@ void main() async{
   double deviceWidth = 800;
   double deviceHeight = 1280;
 
+  if(Utils.isOnWeb()){
+    /// Web things
+  }
+  else{
+    FCMService.initFCM();
+    await RCService.initRemoteConf();
+  }
+
   Map<String, CatcherOptions> catcherConf = ErrorService.getCatcherConfig();
   WidgetsFlutterBinding.ensureInitialized();
-  FCMService.initFCM();
-  await RCService.initRemoteConf();
+
 
   // * Here you must initialize the providers of the app
   var providers = [

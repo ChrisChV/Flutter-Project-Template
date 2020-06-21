@@ -1,4 +1,4 @@
-import 'package:catcher/catcher_plugin.dart';
+import 'package:catcher/catcher.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/utils/utils.dart';
 import 'package:sentry/sentry.dart';

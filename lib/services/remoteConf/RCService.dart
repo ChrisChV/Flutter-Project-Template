@@ -20,7 +20,7 @@ class RCService{
   }
 
   static dynamic get(String keyName, RCType rcType){
-    if(Utils.isOnTest()) return RCDefault.defaults[keyName];
+    if(Utils.isOnTest()  || Utils.isOnWeb()) return RCDefault.defaults[keyName];
     switch(rcType){
       case RCType.STRING:
         return _remoteConfig.getString(keyName);
