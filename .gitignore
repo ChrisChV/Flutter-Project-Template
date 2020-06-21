@@ -44,3 +44,6 @@ fvm
 
 # tomentosa
 tomentosa
+
+# web credentials
+web/firebase.js
