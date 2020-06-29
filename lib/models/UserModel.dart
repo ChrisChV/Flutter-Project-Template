@@ -4,16 +4,19 @@ class UserModel{
 
   String id;
   String name;
-  String photoUrl;
-  String photoUrlBig;
-  FirebaseUser firebaseUser;
+  String gsUrl;
+  String gsUrlBig;
+  FirebaseUser firebaseUser; // Here is other information like email only when is logged
+
+  int photoVersion; // Only for backend
 
   UserModel({
     this.id,
     this.name,
-    this.photoUrl,
-    this.photoUrlBig,
+    this.gsUrl,
+    this.gsUrlBig,
     this.firebaseUser,
+    this.photoVersion,
   });
 
 }

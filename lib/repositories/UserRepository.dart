@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
 import 'package:flutter_project_template/services/DocumentService.dart';
 import 'package:flutter_project_template/services/platforms/firebase/firebase.dart';
+import 'package:flutter_project_template/utils/constants/SizesConstants.dart';
 import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 import 'package:flutter_project_template/utils/constants/storage/StorageConstants.dart';
@@ -39,12 +41,14 @@ class UserRepository{
 
   /// Get a user from a document snapshot
   static UserModel getByDocSnap(DocumentSnapshot docSnap,
-                                      {FirebaseUser user}){
+      {FirebaseUser user}){
+    int photoVersion = docSnap[UserCollectionNames.PHOTO_VERSION];
     return UserModel(
       id: docSnap.documentID,
       name: docSnap[UserCollectionNames.NAME],
-      photoUrl: docSnap[UserCollectionNames.PHOTO_URL],
-      photoUrlBig: docSnap[UserCollectionNames.PHOTO_URL_BIG],
+      gsUrl: _getGsUrl(docSnap.documentID, photoVersion),
+      gsUrlBig: _getBigGsUrl(docSnap.documentID, photoVersion),
+      photoVersion: docSnap[UserCollectionNames.PHOTO_VERSION],
       firebaseUser: user,
     );
   }
@@ -68,8 +72,6 @@ class UserRepository{
       String photoUrl;
       switch(loginType){
         case LoginType.EMAIL_LOGIN_TYPE: {
-          photoUrl = AppConfiguration.DEFAULT_PROFILE_IMAGE;
-          photoUrlBig = AppConfiguration.DEFAULT_BIG_PROFILE_IMAGE;
           break;
         }
         case LoginType.GMAIL_LOGIN_TYPE: {
@@ -87,21 +89,19 @@ class UserRepository{
           photoUrlBig = user.photoUrl;
           break;
       }
-      Tuple2<String, String> urls;
+      Map<String, dynamic> data = {
+        UserCollectionNames.NAME: user.displayName,
+        UserCollectionNames.CREATED: FieldValue.serverTimestamp(),
+      };
       if(loginType != LoginType.EMAIL_LOGIN_TYPE){
         File profileFile = await Utils.getImageFromUrl(user.uid, photoUrl);
         File profileBigFile = await Utils.getImageFromUrl(user.uid + '_big', photoUrlBig);
-        urls = await UserRepository._updateProfileImages(user.uid, profileFile, profileBigFile);
+        bool state = await _updateProfileImages(user.uid, profileFile, profileBigFile);
+        if(!state) data[UserCollectionNames.PHOTO_VERSION] = -1;
+        else data[UserCollectionNames.PHOTO_VERSION] = 1;
       }
-      else{
-        urls = Tuple2<String, String>(photoUrl, photoUrlBig);
-      }
-
-      await docRef.setData({
-        UserCollectionNames.NAME: user.displayName,
-        UserCollectionNames.PHOTO_URL: urls.item1,
-        UserCollectionNames.PHOTO_URL_BIG: urls.item2,
-      });
+      else data[UserCollectionNames.PHOTO_VERSION] = -1;
+      await docRef.setData(data);
       docSnap = await DocumentService.getDoc(docRef, false, forceServer: true);
     }
     UserModel resUser = getByDocSnap(docSnap, user: user);
@@ -112,25 +112,26 @@ class UserRepository{
   }
 
   /// This function updates a user
-  static Future<void> updateUser(String userId,
-                                  {String name,
-                                  File profileImage}) async{
+  static Future<Map<String, dynamic>> updateUser(
+    UserModel user, {
+    String name,
+    File profileImage
+  }) async{
     Map<String, dynamic> data = Map();
-    if(name != null) {
-      data['name'] = name;
-    }
+    if(name != null) data[UserCollectionNames.NAME] = name;
     if(profileImage != null){
-      //TODO
-      /*
-      var photoUrl = await _updateProfileImage(AuthController.appUser.id, profileImage);
-      data['photoUrl'] = photoUrl;
-      AuthController.appUser.photoUrl = photoUrl;
-       */
+      bool state = await _updateProfileImage(user.id, profileImage);
+      if(!state) return null;
+      int photoVersion = user.photoVersion;
+      if(user.photoVersion < 0) photoVersion = photoVersion * -1 + 1;
+      else photoVersion += 1;
+      data[UserCollectionNames.PHOTO_VERSION] = photoVersion;
     }
     if(data.isNotEmpty){
-      DocumentReference userRef = _collectionReference.document(userId);
+      DocumentReference userRef = _collectionReference.document(user.id);
       userRef.updateData(data);
     }
+    return data;
   }
 
 
@@ -164,23 +165,55 @@ class UserRepository{
     return res;
   }
 
+  /// Compress, resize and uploads the profile image to Cloud Storage
+  static Future<bool> _updateProfileImage(String userId, File profileImage) async{
+    File profile = await FlutterNativeImage.compressImage(
+      profileImage.path,
+      quality: 70,
+      targetWidth: SizesConstants.PROFILE_IMAGE_WIDTH,
+      targetHeight: SizesConstants.PROFILE_IMAGE_HEIGHT,
+    );
+    File profileBig = await FlutterNativeImage.compressImage(
+      profileImage.path,
+      quality: 70,
+      targetWidth: SizesConstants.PROFILE_IMAGE_BIG_WIDTH,
+      targetHeight: SizesConstants.PROFILE_IMAGE_BIG_HEIGHT,
+    );
+    return _updateProfileImages(userId, profile, profileBig);
+  }
+
   /// This function stores the profile images to Cloud Storage
-  static Future<Tuple2<String, String>> _updateProfileImages(String uid, File profile, File profileBig) async{
-    String profileFilename = uid + '.jpg';
-    String profileBigFilename = uid + '_big.jpg';
-    await FirebaseService.putFile(
-        _storageReference.child(profileFilename),
-        profile,
-        StorageFileType.IMAGE_JPG
-    );
-    await FirebaseService.putFile(
-        _storageReference.child(profileBigFilename),
-        profileBig,
-        StorageFileType.IMAGE_JPG
-    );
-    String profileUrl = await _storageReference.child(profileFilename).getDownloadURL();
-    String profileBigUrl = await _storageReference.child(profileBigFilename).getDownloadURL();
-    return Tuple2<String,String>(profileUrl, profileBigUrl);
+  static Future<bool> _updateProfileImages(String uid, File profile, File profileBig) async{
+    try{
+      String profileFilename = StorageConstants.SMALL_PREFIX + StorageConstants.JPG_EXTENSION;
+      String profileBigFilename = StorageConstants.BIG_PREFIX + StorageConstants.JPG_EXTENSION;
+      await FirebaseService.putFile(
+          _storageReference.child(uid).child(profileFilename),
+          profile,
+          StorageFileType.IMAGE_JPG
+      );
+      await FirebaseService.putFile(
+          _storageReference.child(uid).child(profileBigFilename),
+          profileBig,
+          StorageFileType.IMAGE_JPG
+      );
+      return true;
+    }
+    catch(error){
+      return false;
+    }
+  }
+
+  static String _getGsUrl(String userId, int photoVersion){
+    return AppConfiguration.GS_BUCKET_URL + StorageConstants.USER_DIRECTORY_NAME
+        + '/' + userId + '/' + StorageConstants.SMALL_PREFIX + '_'
+        + photoVersion.toString() + StorageConstants.JPG_EXTENSION;
+  }
+
+  static String _getBigGsUrl(String userId, int photoVersion){
+    return AppConfiguration.GS_BUCKET_URL + StorageConstants.USER_DIRECTORY_NAME
+        + '/' + userId + '/' + StorageConstants.BIG_PREFIX + '_'
+        + photoVersion.toString() + StorageConstants.JPG_EXTENSION;
   }
 
 }

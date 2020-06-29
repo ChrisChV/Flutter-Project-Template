@@ -1,7 +1,7 @@
 class UserCollectionNames{
 
   static const String NAME = 'name';
-  static const String PHOTO_URL = 'photoUrl';
-  static const String PHOTO_URL_BIG = 'photoUrlBig';
+  static const String CREATED = 'created';
+  static const String PHOTO_VERSION = 'photoVersion';
 
 }
