@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
-import 'package:flutter_project_template/services/AuthService.dart';
 import 'package:flutter_project_template/services/DocumentService.dart';
 import 'package:flutter_project_template/services/platforms/firebase/firebase.dart';
 import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
@@ -116,7 +115,6 @@ class UserRepository{
   static Future<void> updateUser(String userId,
                                   {String name,
                                   File profileImage}) async{
-    if(!AuthService.isLoggedIn()) return;
     Map<String, dynamic> data = Map();
     if(name != null) {
       data['name'] = name;
