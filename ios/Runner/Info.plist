@@ -59,7 +59,7 @@
     <key>FacebookAppID</key>
 
     <!-- Replace "000000000000" with your Facebook App ID here. -->
-    <string>[FACEBOOK_APP_ID]</string>
+    <string>fb[FACEBOOK_APP_ID]</string>
     <key>FacebookDisplayName</key>
 
     <!-- Replace "YOUR_APP_NAME" with your Facebook App name. -->
