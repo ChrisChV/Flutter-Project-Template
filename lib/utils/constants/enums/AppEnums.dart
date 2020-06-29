@@ -12,3 +12,8 @@ enum RCType {
   DOUBLE,
   BOOL
 }
+
+enum StorageFileType{
+  IMAGE_PNG,
+  IMAGE_JPG,
+}

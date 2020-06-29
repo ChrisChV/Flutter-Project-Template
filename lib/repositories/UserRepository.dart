@@ -2,11 +2,12 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
 import 'package:flutter_project_template/services/DocumentService.dart';
+import 'package:flutter_project_template/services/platforms/firebase/firebase.dart';
+import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 import 'package:flutter_project_template/utils/constants/storage/StorageConstants.dart';
 import 'package:flutter_project_template/utils/constants/firestore/FirestoreConstants.dart';
@@ -20,10 +21,11 @@ class UserRepository{
 
   static final CollectionReference _collectionReference =
             Firestore.instance.collection(FirestoreCollections.USER_COLLECTION);
-  static final StorageReference _storageReference =
-                  FirebaseStorage.instance.ref()
-                      .child(StorageConstants.IMAGES_DIRECTORY_NAME)
-                      .child(StorageConstants.USER_DIRECTORY_NAME);
+
+  static final _storageReference = FirebaseService.getStorageReference([
+    StorageConstants.IMAGES_DIRECTORY_NAME,
+    StorageConstants.USER_DIRECTORY_NAME,
+  ]);
 
   /// Gets an User from a logged FirebaseUser
   ///
@@ -168,22 +170,16 @@ class UserRepository{
   static Future<Tuple2<String, String>> _updateProfileImages(String uid, File profile, File profileBig) async{
     String profileFilename = uid + '.jpg';
     String profileBigFilename = uid + '_big.jpg';
-    StorageUploadTask taskProfile;
-    StorageUploadTask taskProfileBig;
-    taskProfile = _storageReference.child(profileFilename).putFile(
+    await FirebaseService.putFile(
+        _storageReference.child(profileFilename),
         profile,
-        StorageMetadata(
-          contentType: 'image/jpg',
-        )
+        StorageFileType.IMAGE_JPG
     );
-    taskProfileBig = _storageReference.child(profileBigFilename).putFile(
+    await FirebaseService.putFile(
+        _storageReference.child(profileBigFilename),
         profileBig,
-        StorageMetadata(
-          contentType: 'image/jpg',
-        )
+        StorageFileType.IMAGE_JPG
     );
-    await taskProfile.onComplete;
-    await taskProfileBig.onComplete;
     String profileUrl = await _storageReference.child(profileFilename).getDownloadURL();
     String profileBigUrl = await _storageReference.child(profileBigFilename).getDownloadURL();
     return Tuple2<String,String>(profileUrl, profileBigUrl);
