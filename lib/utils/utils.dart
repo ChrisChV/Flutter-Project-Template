@@ -9,7 +9,6 @@ import 'package:http/http.dart' as http;
 class Utils{
 
   static Future<bool> checkNetwork() async{
-    if(isOnWeb()) return true; // No se puede usar connectivity en web
     return (await Connectivity().checkConnectivity())
         != ConnectivityResult.none;
   }

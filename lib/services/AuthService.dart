@@ -14,7 +14,7 @@ class AuthService{
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   
   /// For facebook login, a Facebook App is needed
-  //static final facebookLogin = FacebookLogin(); 
+  //static final _facebookLogin = FacebookLogin();
 
   /// Verify if there is a user session is active
   static bool isLoggedIn(){
@@ -114,7 +114,7 @@ class AuthService{
   static Future<void> signOut() async{
     //TODO Device token
     //String pastUid = appUser.id;
-    //facebookLogin.logOut();
+    //_facebookLogin.logOut();
     _googleSignIn.signOut();
     _currentUser = null;
     //_deleteDeviceToken(pastUid);

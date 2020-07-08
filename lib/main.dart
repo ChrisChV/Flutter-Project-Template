@@ -1,3 +1,4 @@
+import 'package:cache_image/hive_cache_image.dart';
 import 'package:catcher/catcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_project_template/view_models/notifiers/implementations/AppUserNotifier.dart';
 import 'package:flutter_project_template/view_models/notifiers/implementations/ThemeNotifier.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 
 void main() async{
@@ -20,16 +22,20 @@ void main() async{
   double deviceWidth = 800;
   double deviceHeight = 1280;
 
+  WidgetsFlutterBinding.ensureInitialized();
+  await RCService.initRemoteConf();
+
   if(Utils.isOnWeb()){
-    /// Web things
+    Hive
+      ..registerAdapter(HiveCacheImageAdapter());
+    await Hive.openBox('cache_image');
   }
   else{
     FCMService.initFCM();
-    await RCService.initRemoteConf();
   }
 
   Map<String, CatcherOptions> catcherConf = ErrorService.getCatcherConfig();
-  WidgetsFlutterBinding.ensureInitialized();
+
 
 
   // * Here you must initialize the providers of the app

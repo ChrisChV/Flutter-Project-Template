@@ -1,3 +1,4 @@
+import 'package:cache_image/cache_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_template/view_models/notifiers/implementations/AppUserNotifier.dart';
@@ -45,6 +46,14 @@ class _LoginState extends State<Login>{
               },
             ),
           ),
+          MaterialButton(
+            child: Text("AAAAAAa"),
+            onPressed: (){
+              setState(() {
+
+              });
+            },
+          ),
           Visibility(
             visible: !appUserNotifier.isLoggedIn(),
             child: Column(
@@ -76,6 +85,12 @@ class _LoginState extends State<Login>{
                 ),
               ],
             ),
+          ),
+          Image(
+            image: CacheImage("gs://flutter-template-44674.appspot.com/images/user/0ooAw4dX5AeGhkH1JYkoWcdwvc72_big.jpg"),
+          ),
+          Image(
+            image: CacheImage("gs://flutter-template-44674.appspot.com/images/user/0ooAw4dX5AeGhkH1JYkoWcdwvc72.jpg"),
           )
         ],
       ),
