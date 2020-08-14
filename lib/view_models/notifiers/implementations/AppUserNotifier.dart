@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
+import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_project_template/view_models/notifiers/interfaces/AppUserNotifierInterface.dart';
 import 'package:flutter_project_template/repositories/UserRepository.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
@@ -14,6 +15,8 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
 
   UserModel _appUser;
   UserModel get appUser => _appUser;
+  bool _supportsAppleSignIn = false;
+  bool get supportsAppleSignIn => _supportsAppleSignIn;
 
   bool isLoggedIn(){
     return _appUser != null;
@@ -25,6 +28,7 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   @override
   Future<NotifierState> initialVerification({bool fromCache = false,
                                               bool notify = true}) async{
+    _supportsAppleSignIn = await Utils.supportsAppleSignIn();
     FirebaseUser user = await AuthService.initialVerification();
     if(user == null) return NotifierState.SUCCESS;
     _appUser = await UserRepository.getUserFromCredentials(user, cache: fromCache);
@@ -150,6 +154,33 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
     }
   }
   */
+
+  /// Function that has the functionality of Sign In and Sign Up with Apple
+  @override
+  Future<LoginState> appleSignIn() async{
+    try{
+      if(_appUser != null){
+        ErrorService.sendError(BadLoginException());
+        return LoginState.ERROR_BAD_LOGIN;
+      }
+      FirebaseUser user = await AuthService.appleSignIn();
+      if(user == null) return LoginState.ERROR_BAD_LOGIN;
+      Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
+          user, loginType: LoginType.EMAIL_LOGIN_TYPE);
+      _appUser = result.item1;
+      if(_appUser == null){
+        AuthService.signOut();
+        return LoginState.ERROR_BAD_LOGIN;
+      }
+      notifyListeners();
+      return LoginState.SUCCESS;
+    }
+    catch(state){
+      if(state.runtimeType == LoginState) return state;
+      ErrorService.sendError(state);
+      return LoginState.ERROR_BAD_LOGIN;
+    }
+  }
 
   /// Sign Out the session of the user.
   @override

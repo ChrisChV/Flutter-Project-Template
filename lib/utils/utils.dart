@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:device_info/device_info.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_project_template/utils/constants/SizesConstants.dart';
 import 'package:path_provider/path_provider.dart';
@@ -66,6 +67,13 @@ class Utils{
   static bool isOnTest(){
     if(isOnWeb()) return false; // TODO
     return Platform.environment.containsKey('FLUTTER_TEST');
+  }
+
+  static Future<bool> supportsAppleSignIn() async{
+    if(!Platform.isIOS) return false;
+    var iosInfo = await DeviceInfoPlugin().iosInfo;
+    var version = iosInfo.systemVersion;
+    return version.contains('13');
   }
 
 }

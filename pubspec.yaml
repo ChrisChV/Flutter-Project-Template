@@ -44,6 +44,8 @@ dependencies:
   firebase: ^7.3.0
   flutter_native_image: ^0.0.5+2
   hive: ^1.4.1+1
+  apple_sign_in: 0.1.0
+  device_info: 0.4.2+4
   cache_image:
     git: https://github.com/ChrisChV/flutter_cache_image
 

@@ -5,8 +5,10 @@ import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 abstract class AppUserNotifierInterface{
 
   /// Logged User of the app
-  UserModel _appUser;
   UserModel get appUser => _appUser;
+
+  /// True if the device supports Apple Sign In
+  bool get supportsAppleSignIn => _supportsAppleSignIn;
 
   /// Gets the session of the logged user
   ///
@@ -31,7 +33,14 @@ abstract class AppUserNotifierInterface{
   /// If is the first login, then it sends an email verification.
   //Future<LoginState> facebookSignIn();
 
+  /// Function that has the functionality of Sign In and Sign Up with Apple
+  Future<LoginState> appleSignIn();
+
   /// Sign Out the session of the user.
   Future<NotifierState> signOut();
+
+  /// Private Stuff
+  UserModel _appUser;
+  bool _supportsAppleSignIn = false;
 
 }

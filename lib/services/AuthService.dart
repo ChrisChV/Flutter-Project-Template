@@ -1,8 +1,10 @@
+import 'package:apple_sign_in/apple_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
+import 'package:flutter_project_template/utils/exceptions/LoginExceptions.dart';
 import 'package:flutter_project_template/utils/utils.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
@@ -104,6 +106,39 @@ class AuthService{
     }
   }
   */
+
+  /// Function that has the functionality of Sign In and SignUp with Apple
+  static Future<FirebaseUser> appleSignIn() async{
+    try{
+      final AuthorizationResult result = await AppleSignIn.performRequests([
+        AppleIdRequest(requestedScopes: [Scope.email, Scope.fullName])
+      ]);
+      switch(result.status){
+        case AuthorizationStatus.authorized:
+          final AppleIdCredential appleIdCredential = result.credential;
+          OAuthProvider oAuthProvider = OAuthProvider(providerId: "apple.com");
+          final AuthCredential credential = oAuthProvider.getCredential(
+            idToken: String.fromCharCodes(appleIdCredential.identityToken),
+            accessToken: String.fromCharCodes(appleIdCredential.authorizationCode),
+          );
+          FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
+          UserUpdateInfo updateUser = UserUpdateInfo();
+          updateUser.displayName = "${appleIdCredential.fullName.givenName}"
+              "${appleIdCredential.fullName.familyName}";
+          await user.updateProfile(updateUser);
+          await user.reload();
+          user = await _auth.currentUser();
+          return user;
+        case AuthorizationStatus.cancelled:
+          throw(LoginCanceledException(""));
+        case AuthorizationStatus.error:
+          throw(_handlerLoginError(result.error));
+      }
+    }
+    catch(error){
+      throw(_handlerLoginError(error));
+    }
+  }
 
   /// Sends an email verification to [user]
   static void sendEmailVerification(FirebaseUser user){
