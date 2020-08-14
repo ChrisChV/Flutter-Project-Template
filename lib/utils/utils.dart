@@ -70,6 +70,7 @@ class Utils{
   }
 
   static Future<bool> supportsAppleSignIn() async{
+    if (isOnWeb()) return false;
     if(!Platform.isIOS) return false;
     var iosInfo = await DeviceInfoPlugin().iosInfo;
     var version = iosInfo.systemVersion;
