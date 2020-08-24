@@ -29,7 +29,7 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   Future<NotifierState> initialVerification({bool fromCache = false,
                                               bool notify = true}) async{
     _supportsAppleSignIn = await Utils.supportsAppleSignIn();
-    FirebaseUser user = await AuthService.initialVerification();
+    User user = await AuthService.initialVerification();
     if(user == null) return NotifierState.SUCCESS;
     _appUser = await UserRepository.getUserFromCredentials(user, cache: fromCache);
     if(_appUser == null) AuthService.signOut();
@@ -45,7 +45,7 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
         ErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
-      FirebaseUser user = await AuthService.emailPasswordSignIn(email, password);
+      User user = await AuthService.emailPasswordSignIn(email, password);
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
       _appUser = await UserRepository.getUserFromCredentials(user);
       if(_appUser == null){
@@ -72,7 +72,7 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
         ErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
-      FirebaseUser user = await AuthService.emailPasswordSignUp(email, password, name);
+      User user = await AuthService.emailPasswordSignUp(email, password, name);
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
       Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
           user, loginType: LoginType.EMAIL_LOGIN_TYPE
@@ -102,7 +102,7 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
         ErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
-      FirebaseUser user = await AuthService.googleSignIn();
+      User user = await AuthService.googleSignIn();
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
       Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
           user, loginType: LoginType.GMAIL_LOGIN_TYPE);
@@ -163,7 +163,7 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
         ErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
-      FirebaseUser user = await AuthService.appleSignIn();
+      User user = await AuthService.appleSignIn();
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
       Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
           user, loginType: LoginType.EMAIL_LOGIN_TYPE);

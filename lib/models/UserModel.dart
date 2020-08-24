@@ -6,7 +6,7 @@ class UserModel{
   String name;
   String gsUrl;
   String gsUrlBig;
-  FirebaseUser firebaseUser; // Here is other information like email only when is logged
+  User firebaseUser; // Here is other information like email only when is logged
 
   int photoVersion; // Only for backend
 

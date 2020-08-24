@@ -10,7 +10,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService{
 
-  static FirebaseUser _currentUser;
+  static User _currentUser;
   static bool firstLogin = false;
   static final GoogleSignIn _googleSignIn = GoogleSignIn();
   static final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -24,27 +24,27 @@ class AuthService{
   }
 
   /// Returns the current user session
-  static Future<FirebaseUser> initialVerification({bool cache = false}) async{
-    _currentUser = await _auth.currentUser();
+  static Future<User> initialVerification({bool cache = false}) async{
+    _currentUser = _auth.currentUser;
     return _currentUser;
   }
 
   /// Sign Up with email an password
   ///
   /// It sends an email verification
-  static Future<FirebaseUser> emailPasswordSignUp(
+  static Future<User> emailPasswordSignUp(
       String email, String password, String name) async {
     try{
-      FirebaseUser user = (await _auth.createUserWithEmailAndPassword(
+      User user = (await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       )).user;
-      UserUpdateInfo info = new UserUpdateInfo();
-      info.displayName = name;
-      info.photoUrl = AppConfiguration.DEFAULT_PROFILE_IMAGE;
-      await user.updateProfile(info);
+      await user.updateProfile(
+        displayName: name,
+        photoURL: AppConfiguration.DEFAULT_PROFILE_IMAGE,
+      );
       await user.reload();
-      user = await _auth.currentUser();
+      user = _auth.currentUser;
       user.sendEmailVerification();
       return user;
     }
@@ -54,9 +54,9 @@ class AuthService{
   }
 
   /// Sign in with email and password
-  static Future<FirebaseUser> emailPasswordSignIn(String email, String password) async {
+  static Future<User> emailPasswordSignIn(String email, String password) async {
     try{
-      final FirebaseUser user = (await _auth.signInWithEmailAndPassword(
+      final User user = (await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       )).user;
@@ -70,12 +70,12 @@ class AuthService{
   /// Function that has the functionality of Sign In and Sign Up with Google
   ///
   /// With Google, email verification is not necessary.
-  static Future<FirebaseUser> googleSignIn() async {
+  static Future<User> googleSignIn() async {
     try{
       final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-      final AuthCredential credential = GoogleAuthProvider.getCredential(
+      final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
@@ -108,7 +108,7 @@ class AuthService{
   */
 
   /// Function that has the functionality of Sign In and SignUp with Apple
-  static Future<FirebaseUser> appleSignIn() async{
+  static Future<User> appleSignIn() async{
     try{
       final AuthorizationResult result = await AppleSignIn.performRequests([
         AppleIdRequest(requestedScopes: [Scope.email, Scope.fullName])
@@ -116,18 +116,17 @@ class AuthService{
       switch(result.status){
         case AuthorizationStatus.authorized:
           final AppleIdCredential appleIdCredential = result.credential;
-          OAuthProvider oAuthProvider = OAuthProvider(providerId: "apple.com");
-          final AuthCredential credential = oAuthProvider.getCredential(
+          OAuthProvider oAuthProvider = OAuthProvider("apple.com");
+          final AuthCredential credential = oAuthProvider.credential(
             idToken: String.fromCharCodes(appleIdCredential.identityToken),
             accessToken: String.fromCharCodes(appleIdCredential.authorizationCode),
           );
-          FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
-          UserUpdateInfo updateUser = UserUpdateInfo();
-          updateUser.displayName = "${appleIdCredential.fullName.givenName}"
+          User user = (await _auth.signInWithCredential(credential)).user;
+          String displayName = "${appleIdCredential.fullName.givenName}"
               "${appleIdCredential.fullName.familyName}";
-          await user.updateProfile(updateUser);
+          await user.updateProfile(displayName: displayName);
           await user.reload();
-          user = await _auth.currentUser();
+          user = _auth.currentUser;
           return user;
         case AuthorizationStatus.cancelled:
           throw(LoginCanceledException(""));
@@ -141,7 +140,7 @@ class AuthService{
   }
 
   /// Sends an email verification to [user]
-  static void sendEmailVerification(FirebaseUser user){
+  static void sendEmailVerification(User user){
     user.sendEmailVerification();
   }
 

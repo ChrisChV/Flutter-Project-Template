@@ -21,7 +21,7 @@ import 'package:tuple/tuple.dart';
 class UserRepository{
 
   static final CollectionReference _collectionReference =
-            Firestore.instance.collection(FirestoreCollections.USER_COLLECTION);
+            FirebaseFirestore.instance.collection(FirestoreCollections.USER_COLLECTION);
 
   static final _storageReference = FirebaseService.getStorageReference([
     StorageConstants.IMAGES_DIRECTORY_NAME,
@@ -31,9 +31,9 @@ class UserRepository{
   /// Gets an User from a logged FirebaseUser
   ///
   /// Set [cache] to true if you want to get the user from cache.
-  static Future<UserModel> getUserFromCredentials(FirebaseUser user, {bool cache = false}) async{
+  static Future<UserModel> getUserFromCredentials(User user, {bool cache = false}) async{
     DocumentSnapshot userDoc = await DocumentService.getDoc(
-        _collectionReference.document(user.uid),
+        _collectionReference.doc(user.uid),
         cache);
     if(!userDoc.exists) return null;
     return getByDocSnap(userDoc, user: user);
@@ -41,14 +41,14 @@ class UserRepository{
 
   /// Get a user from a document snapshot
   static UserModel getByDocSnap(DocumentSnapshot docSnap,
-      {FirebaseUser user}){
-    int photoVersion = docSnap[UserCollectionNames.PHOTO_VERSION];
+      {User user}){
+    int photoVersion = docSnap.get(UserCollectionNames.PHOTO_VERSION);
     return UserModel(
-      id: docSnap.documentID,
-      name: docSnap[UserCollectionNames.NAME],
-      gsUrl: _getGsUrl(docSnap.documentID, photoVersion),
-      gsUrlBig: _getBigGsUrl(docSnap.documentID, photoVersion),
-      photoVersion: docSnap[UserCollectionNames.PHOTO_VERSION],
+      id: docSnap.id,
+      name: docSnap.get(UserCollectionNames.NAME),
+      gsUrl: _getGsUrl(docSnap.id, photoVersion),
+      gsUrlBig: _getBigGsUrl(docSnap.id, photoVersion),
+      photoVersion: docSnap.get(UserCollectionNames.PHOTO_VERSION),
       firebaseUser: user,
     );
   }
@@ -60,9 +60,11 @@ class UserRepository{
   /// If the user does not exist in the database, then this function creates it.
   /// The [loginType] is used to get the image profile, that is different for
   /// each type of login.
-  static Future<Tuple2<UserModel, FirstLogin>> getCreateUser(FirebaseUser user,
-      {LoginType loginType = LoginType.EMAIL_LOGIN_TYPE}) async{
-    DocumentReference docRef = _collectionReference.document(user.uid);
+  static Future<Tuple2<UserModel, FirstLogin>> getCreateUser(
+      User user, {
+      LoginType loginType = LoginType.EMAIL_LOGIN_TYPE
+  }) async{
+    DocumentReference docRef = _collectionReference.doc(user.uid);
     DocumentSnapshot docSnap = await DocumentService.getDoc(
         docRef, false, forceServer: true);
     if(docSnap == null) return null;
@@ -75,18 +77,18 @@ class UserRepository{
           break;
         }
         case LoginType.GMAIL_LOGIN_TYPE: {
-          photoUrl = Utils.getGmailProfileUrl(user.photoUrl, false);
-          photoUrlBig = Utils.getGmailProfileUrl(user.photoUrl, true);
+          photoUrl = Utils.getGmailProfileUrl(user.photoURL, false);
+          photoUrlBig = Utils.getGmailProfileUrl(user.photoURL, true);
           break;
         }
         case LoginType.FACEBOOK_LOGIN_TYPE: {
-          photoUrl = Utils.getFacebookProfileUrl(user.photoUrl, false);
-          photoUrlBig = Utils.getFacebookProfileUrl(user.photoUrl, true);
+          photoUrl = Utils.getFacebookProfileUrl(user.photoURL, false);
+          photoUrlBig = Utils.getFacebookProfileUrl(user.photoURL, true);
           break;
         }
         default:
-          photoUrl = user.photoUrl;
-          photoUrlBig = user.photoUrl;
+          photoUrl = user.photoURL;
+          photoUrlBig = user.photoURL;
           break;
       }
       Map<String, dynamic> data = {
@@ -101,7 +103,7 @@ class UserRepository{
         else data[UserCollectionNames.PHOTO_VERSION] = 1;
       }
       else data[UserCollectionNames.PHOTO_VERSION] = -1;
-      await docRef.setData(data);
+      await docRef.set(data);
       docSnap = await DocumentService.getDoc(docRef, false, forceServer: true);
     }
     UserModel resUser = getByDocSnap(docSnap, user: user);
@@ -128,8 +130,8 @@ class UserRepository{
       data[UserCollectionNames.PHOTO_VERSION] = photoVersion;
     }
     if(data.isNotEmpty){
-      DocumentReference userRef = _collectionReference.document(user.id);
-      userRef.updateData(data);
+      DocumentReference userRef = _collectionReference.doc(user.id);
+      userRef.update(data);
     }
     return data;
   }
@@ -139,9 +141,9 @@ class UserRepository{
     // TODO FCM
     String deviceId = await FlutterUdid.udid;
     //String token = await FCM.getFcmToken();
-    _collectionReference.document(uid)
+    _collectionReference.doc(uid)
         .collection(FirestoreCollections.USER_DEVICES_COLLECTION)
-        .document(deviceId).setData({
+        .doc(deviceId).set({
       DevicesCollectionNames.FCM_TOKEN: null, //TODO
       DevicesCollectionNames.PLATFORM: Platform.operatingSystem,
     });
@@ -149,18 +151,18 @@ class UserRepository{
 
   static Future<void> deleteDevice(String uid) async{
     String deviceId = await FlutterUdid.udid;
-    _collectionReference.document(uid)
+    _collectionReference.doc(uid)
         .collection(FirestoreCollections.USER_DEVICES_COLLECTION)
-        .document(deviceId).delete();
+        .doc(deviceId).delete();
   }
 
   static Future<List<String>> getDevicesTokens(String uid) async{
     List<String> res = List();
-    CollectionReference ref = _collectionReference.document(uid).collection(FirestoreCollections.USER_DEVICES_COLLECTION);
+    CollectionReference ref = _collectionReference.doc(uid).collection(FirestoreCollections.USER_DEVICES_COLLECTION);
     QuerySnapshot query = await DocumentService.getAll(ref, false, forceServer: true);
     if(query == null) return res;
-    for(DocumentSnapshot doc in query.documents){
-      res.add(doc[DevicesCollectionNames.FCM_TOKEN]);
+    for(QueryDocumentSnapshot doc in query.docs){
+      res.add(doc.get(DevicesCollectionNames.FCM_TOKEN));
     }
     return res;
   }

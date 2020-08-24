@@ -1,5 +1,6 @@
 import 'package:cache_image/hive_cache_image.dart';
 import 'package:catcher/catcher.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
 import 'package:flutter_project_template/services/FCMService.dart';
@@ -24,6 +25,7 @@ void main() async{
 
   WidgetsFlutterBinding.ensureInitialized();
   await RCService.initRemoteConf();
+  Firebase.initializeApp();
 
   if(Utils.isOnWeb()){
     Hive
