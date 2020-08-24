@@ -24,8 +24,8 @@ void main() async{
   double deviceHeight = 1280;
 
   WidgetsFlutterBinding.ensureInitialized();
-  await RCService.initRemoteConf();
   Firebase.initializeApp();
+  await RCService.initRemoteConf();
 
   if(Utils.isOnWeb()){
     Hive
