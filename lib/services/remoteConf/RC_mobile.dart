@@ -2,7 +2,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter_project_template/services/remoteConf/default_values.dart';
 import 'package:flutter_project_template/utils/constants/TimeConstants.dart';
 import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
-import 'package:flutter_project_template/utils/utils.dart';
+import 'package:paulonia_utils/paulonia_utils.dart';
 
 class RCServicePlatform{
 
@@ -11,7 +11,7 @@ class RCServicePlatform{
   static Future<void> initRemoteConf() async{
     _remoteConfig = await RemoteConfig.instance;
     await _remoteConfig.setDefaults(RCDefault.defaults);
-    if(Utils.isOnRelease() && (await Utils.checkNetwork())){
+    if(PUtils.isOnRelease() && (await PUtils.checkNetwork())){
       await _remoteConfig.fetch(
           expiration: const Duration(hours: TimeConstants.REMOTE_CONF_EXPIRATION_TIME_HOUR)
       );
@@ -20,7 +20,7 @@ class RCServicePlatform{
   }
 
   static dynamic get(String keyName, RCType rcType){
-    if(Utils.isOnTest()) return RCDefault.defaults[keyName];
+    if(PUtils.isOnTest()) return RCDefault.defaults[keyName];
     switch(rcType){
       case RCType.STRING:
         return _remoteConfig.getString(keyName);

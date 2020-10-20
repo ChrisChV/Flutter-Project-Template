@@ -16,6 +16,7 @@ import 'package:flutter_project_template/utils/constants/firestore/collections/D
 import 'package:flutter_project_template/utils/constants/firestore/collections/User.dart';
 import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_udid/flutter_udid.dart';
+import 'package:paulonia_utils/paulonia_utils.dart';
 import 'package:tuple/tuple.dart';
 
 class UserRepository{
@@ -77,13 +78,29 @@ class UserRepository{
           break;
         }
         case LoginType.GMAIL_LOGIN_TYPE: {
-          photoUrl = Utils.getGmailProfileUrl(user.photoURL, false);
-          photoUrlBig = Utils.getGmailProfileUrl(user.photoURL, true);
+          photoUrl = PUtils.getGmailProfileUrl(
+              user.photoURL,
+              SizesConstants.PROFILE_IMAGE_HEIGHT,
+              SizesConstants.PROFILE_IMAGE_WIDTH
+          );
+          photoUrlBig = PUtils.getGmailProfileUrl(
+              user.photoURL,
+              SizesConstants.PROFILE_IMAGE_BIG_HEIGHT,
+              SizesConstants.PROFILE_IMAGE_BIG_WIDTH
+          );
           break;
         }
         case LoginType.FACEBOOK_LOGIN_TYPE: {
-          photoUrl = Utils.getFacebookProfileUrl(user.photoURL, false);
-          photoUrlBig = Utils.getFacebookProfileUrl(user.photoURL, true);
+          photoUrl = PUtils.getFacebookProfileUrl(
+              user.photoURL,
+              SizesConstants.PROFILE_IMAGE_HEIGHT,
+              SizesConstants.PROFILE_IMAGE_WIDTH
+          );
+          photoUrlBig = PUtils.getFacebookProfileUrl(
+              user.photoURL,
+              SizesConstants.PROFILE_IMAGE_BIG_HEIGHT,
+              SizesConstants.PROFILE_IMAGE_BIG_WIDTH
+          );
           break;
         }
         default:

@@ -7,11 +7,11 @@ import 'package:flutter_project_template/services/ErrorService.dart';
 import 'package:flutter_project_template/services/FCMService.dart';
 import 'package:flutter_project_template/services/remoteConf/RCService.dart';
 import 'package:flutter_project_template/splashScreen.dart';
-import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_project_template/view_models/notifiers/implementations/AppUserNotifier.dart';
 import 'package:flutter_project_template/view_models/notifiers/implementations/ThemeNotifier.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:hive/hive.dart';
+import 'package:paulonia_utils/paulonia_utils.dart';
 import 'package:provider/provider.dart';
 
 void main() async{
@@ -30,7 +30,7 @@ void main() async{
 
   await CacheImage.init(proxy: "https://cors-anywhere.herokuapp.com/");
 
-  if(Utils.isOnWeb()){
+  if(PUtils.isOnWeb()){
 
   }
   else{

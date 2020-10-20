@@ -1,6 +1,6 @@
 import 'package:catcher/catcher.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
-import 'package:flutter_project_template/utils/utils.dart';
+import 'package:paulonia_utils/paulonia_utils.dart';
 import 'package:sentry/sentry.dart';
 
 class ErrorService{
@@ -15,7 +15,7 @@ class ErrorService{
       throw(error);
     }
     catch(_error, stacktrace){
-      if(Utils.isOnTest()) throw(error);
+      if(PUtils.isOnTest()) throw(error);
       Catcher.reportCheckedError(error, stacktrace);
     }
   }

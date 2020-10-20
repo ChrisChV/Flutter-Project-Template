@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
-import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_project_template/view_models/notifiers/interfaces/AppUserNotifierInterface.dart';
 import 'package:flutter_project_template/repositories/UserRepository.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
@@ -9,6 +8,7 @@ import 'package:flutter_project_template/services/ErrorService.dart';
 import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 import 'package:flutter_project_template/utils/exceptions/LoginExceptions.dart';
+import 'package:paulonia_utils/paulonia_utils.dart';
 import 'package:tuple/tuple.dart';
 
 class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface{
@@ -28,7 +28,7 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   @override
   Future<NotifierState> initialVerification({bool fromCache = false,
                                               bool notify = true}) async{
-    _supportsAppleSignIn = await Utils.supportsAppleSignIn();
+    _supportsAppleSignIn = await PUtils.supportsAppleSignIn();
     User user = await AuthService.initialVerification();
     if(user == null) return NotifierState.SUCCESS;
     _appUser = await UserRepository.getUserFromCredentials(user, cache: fromCache);

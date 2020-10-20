@@ -5,8 +5,8 @@ import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/services/ErrorService.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 import 'package:flutter_project_template/utils/exceptions/LoginExceptions.dart';
-import 'package:flutter_project_template/utils/utils.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:paulonia_utils/paulonia_utils.dart';
 
 class AuthService{
 
@@ -158,7 +158,7 @@ class AuthService{
   /// Handle all login errors
   static LoginState _handlerLoginError(dynamic error){
     signOut();
-    if(Utils.isOnWeb()){
+    if(PUtils.isOnWeb()){
       if(error.code == null){
         return LoginState.CANCELED_BY_THE_USER;
       }
