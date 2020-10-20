@@ -1,3 +1,4 @@
+import 'package:cache_image/cache_image.dart';
 import 'package:cache_image/hive_cache_image.dart';
 import 'package:catcher/catcher.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -24,13 +25,13 @@ void main() async{
   double deviceHeight = 1280;
 
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp();
+  await Firebase.initializeApp();
   await RCService.initRemoteConf();
 
+  await CacheImage.init(proxy: "https://cors-anywhere.herokuapp.com/");
+
   if(Utils.isOnWeb()){
-    Hive
-      ..registerAdapter(HiveCacheImageAdapter());
-    await Hive.openBox('cache_image');
+
   }
   else{
     FCMService.initFCM();

@@ -87,7 +87,7 @@ class _LoginState extends State<Login>{
             ),
           ),
           Image(
-            image: CacheImage("gs://flutter-template-44674.appspot.com/images/user/0ooAw4dX5AeGhkH1JYkoWcdwvc72_big.jpg"),
+            image: CacheImage("https://hd.tudocdn.net/874944?w=646&h=284"),
           ),
           Image(
             image: CacheImage("gs://flutter-template-44674.appspot.com/images/user/0ooAw4dX5AeGhkH1JYkoWcdwvc72.jpg"),
