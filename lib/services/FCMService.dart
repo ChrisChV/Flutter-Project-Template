@@ -9,6 +9,7 @@ import 'package:flutter_project_template/repositories/UserRepository.dart';
 import 'package:http/http.dart' as http;
 
 class FCMService {
+
   static final FirebaseMessaging _fcm = FirebaseMessaging();
   static StreamSubscription iosSubscription;
 

@@ -7,7 +7,6 @@ import 'package:flutter_project_template/services/FCMService.dart';
 import 'package:flutter_project_template/services/remoteConf/default_values.dart';
 import 'package:flutter_project_template/utils/constants/TimeConstants.dart';
 import 'package:flutter_project_template/utils/theme.dart';
-import 'package:device_preview/device_preview.dart';
 import 'package:flutter_project_template/view_models/controllers/AppUserController.dart';
 import 'package:get/get.dart';
 import 'package:paulonia_error_service/paulonia_error_service.dart';
@@ -38,18 +37,15 @@ void main() async{
 
   }
   else{
-    FCMService.initFCM();
+    //FCMService.initFCM();
   }
 
   Map<String, CatcherOptions> catcherConf = PauloniaErrorService.getCatcherConfig();
 
   Catcher(
-      rootWidget: DevicePreview(
-        enabled: preview,
-        builder: (context) => MaterialAppWithTheme(
-          screenHeight: deviceHeight,
-          screenWidth: deviceWidth,
-        ),
+      rootWidget: MaterialAppWithTheme(
+        screenHeight: deviceHeight,
+        screenWidth: deviceWidth,
       ),
       debugConfig: catcherConf['debug'],
       releaseConfig: catcherConf['release'],
@@ -83,8 +79,6 @@ class _MaterialAppWithThemeState extends State<MaterialAppWithTheme> {
       debugShowCheckedModeBanner: false,
       onInit: loadInitialControllers,
       title: 'Flutter project template',
-      locale: DevicePreview.of(context).locale,
-      builder: DevicePreview.appBuilder,
       getPages: UIRouter.listPages,
       initialRoute: RouteNames.SplashRoute,
       theme: CustomTheme.themeData
