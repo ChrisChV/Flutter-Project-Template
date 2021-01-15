@@ -1,23 +1,28 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
-import 'package:flutter_project_template/view_models/notifiers/interfaces/AppUserNotifierInterface.dart';
 import 'package:flutter_project_template/repositories/UserRepository.dart';
 import 'package:flutter_project_template/services/AuthService.dart';
-import 'package:flutter_project_template/services/ErrorService.dart';
 import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 import 'package:flutter_project_template/utils/exceptions/LoginExceptions.dart';
+import 'package:get/get.dart';
+import 'package:paulonia_error_service/paulonia_error_service.dart';
 import 'package:paulonia_utils/paulonia_utils.dart';
 import 'package:tuple/tuple.dart';
 
-class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface{
+class AppUserController extends GetxController{
 
-  UserModel _appUser;
+  /// Logged user
   UserModel get appUser => _appUser;
-  bool _supportsAppleSignIn = false;
+
+  /// Verifies if is the first login of [appUser]
+  bool get firstLogin => _firstLogin == FirstLogin.TRUE;
+
+  /// Verifies if the device supports Apple Sign In
   bool get supportsAppleSignIn => _supportsAppleSignIn;
 
+
+  /// Verify if there is a user session is active
   bool isLoggedIn(){
     return _appUser != null;
   }
@@ -25,24 +30,23 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   /// Gets the session of the logged user
   ///
   /// * This function have to be called on start of the app
-  @override
-  Future<NotifierState> initialVerification({bool fromCache = false,
-                                              bool notify = true}) async{
+  Future<NotifierState> initialVerification({
+    bool notify = true
+  }) async{
     _supportsAppleSignIn = await PUtils.supportsAppleSignIn();
-    User user = await AuthService.initialVerification();
+    User user = AuthService.initialVerification();
     if(user == null) return NotifierState.SUCCESS;
-    _appUser = await UserRepository.getUserFromCredentials(user, cache: fromCache);
+    _appUser = await UserRepository.getUserFromCredentials(user, cache: false);
     if(_appUser == null) AuthService.signOut();
-    else if(notify) notifyListeners();
+    else if(notify) update();
     return NotifierState.SUCCESS;
   }
 
   /// Sign In with email and password
-  @override
   Future<LoginState> emailPasswordSignIn(String email, String password) async{
     try{
       if(_appUser != null){
-        ErrorService.sendError(BadLoginException());
+        PauloniaErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
       User user = await AuthService.emailPasswordSignIn(email, password);
@@ -52,12 +56,12 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      notifyListeners();
+      update();
       return LoginState.SUCCESS;
     }
     catch(state){
       if(state.runtimeType == LoginState) return state;
-      ErrorService.sendError(state);
+      PauloniaErrorService.sendError(state);
       return LoginState.ERROR_BAD_LOGIN;
     }
   }
@@ -65,11 +69,10 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   /// Sign Up with email and password
   ///
   /// It sends and email verification.
-  @override
   Future<LoginState> emailPasswordSignUp(String email, String password, String name) async{
     try{
       if(_appUser != null){
-        ErrorService.sendError(BadLoginException());
+        PauloniaErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
       User user = await AuthService.emailPasswordSignUp(email, password, name);
@@ -78,16 +81,17 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
           user, loginType: LoginType.EMAIL_LOGIN_TYPE
       );
       _appUser = result.item1;
+      _firstLogin = result.item2;
       if(_appUser == null){
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      notifyListeners();
+      update();
       return LoginState.SUCCESS;
     }
     catch(state){
       if(state.runtimeType == LoginState) return state;
-      ErrorService.sendError(state);
+      PauloniaErrorService.sendError(state);
       return LoginState.ERROR_BAD_LOGIN;
     }
   }
@@ -95,11 +99,10 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   /// Function that has the functionality of Sign In and Sign Up with Google
   ///
   /// With Google, email verification is not necessary.
-  @override
   Future<LoginState> googleSignIn() async{
     try{
       if(_appUser != null){
-        ErrorService.sendError(BadLoginException());
+        PauloniaErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
       User user = await AuthService.googleSignIn();
@@ -107,16 +110,17 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
       Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
           user, loginType: LoginType.GMAIL_LOGIN_TYPE);
       _appUser = result.item1;
+      _firstLogin = result.item2;
       if(_appUser == null){
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      notifyListeners();
+      update();
       return LoginState.SUCCESS;
     }
     catch(state){
       if(state.runtimeType == LoginState) return state;
-      ErrorService.sendError(state);
+      PauloniaErrorService.sendError(state);
       return LoginState.ERROR_BAD_LOGIN;
     }
   }
@@ -125,18 +129,18 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
   ///
   /// If is the first login, then it sends an email verification.
   /*
-  @override
   Future<LoginState> facebookSignIn() async{
     try{
       if(_appUser != null){
-        ErrorService.sendError(BadLoginException());
+        PauloniaErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
-      FirebaseUser user = await AuthService.facebookSignIn();
+      User user = await AuthService.facebookSignIn();
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
       Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
           user, loginType: LoginType.FACEBOOK_LOGIN_TYPE);
       _appUser = result.item1;
+      _firstLogin = result.item2;
       if(_appUser == null){
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
@@ -144,23 +148,23 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
       if(result.item2 == FirstLogin.TRUE){
         AuthService.sendEmailVerification(_appUser.firebaseUser);
       }
-      notifyListeners();
+      update();
       return LoginState.SUCCESS;
     }
     catch(state){
       if(state.runtimeType == LoginState) return state;
-      ErrorService.sendError(state);
+      PauloniaErrorService.sendError(state);
       return LoginState.ERROR_BAD_LOGIN;
     }
   }
-  */
+   */
+
 
   /// Function that has the functionality of Sign In and Sign Up with Apple
-  @override
   Future<LoginState> appleSignIn() async{
     try{
       if(_appUser != null){
-        ErrorService.sendError(BadLoginException());
+        PauloniaErrorService.sendError(BadLoginException());
         return LoginState.ERROR_BAD_LOGIN;
       }
       User user = await AuthService.appleSignIn();
@@ -168,28 +172,35 @@ class AppUserNotifier extends ChangeNotifier implements AppUserNotifierInterface
       Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
           user, loginType: LoginType.EMAIL_LOGIN_TYPE);
       _appUser = result.item1;
+      _firstLogin = result.item2;
       if(_appUser == null){
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      notifyListeners();
+      update();
       return LoginState.SUCCESS;
     }
     catch(state){
       if(state.runtimeType == LoginState) return state;
-      ErrorService.sendError(state);
+      PauloniaErrorService.sendError(state);
       return LoginState.ERROR_BAD_LOGIN;
     }
   }
 
   /// Sign Out the session of the user.
-  @override
-  Future<NotifierState> signOut() async{
+  Future<NotifierState> signOut({bool notify = true}) async{
     AuthService.signOut();
     _appUser = null;
-    notifyListeners();
+    _firstLogin = FirstLogin.FALSE;
+    if(notify) update();
     return NotifierState.SUCCESS;
   }
 
+
+  /// Private stuff
+
+  UserModel _appUser;
+  bool _supportsAppleSignIn = false;
+  FirstLogin _firstLogin = FirstLogin.FALSE;
 
 }

@@ -1,9 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_project_template/pages/Contact.dart';
-import 'package:flutter_project_template/pages/Login.dart';
-import 'package:flutter_project_template/view_models/notifiers/implementations/AppUserNotifier.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_project_template/interfaces/modules/authentication/login/login_index.dart';
+import 'package:flutter_project_template/interfaces/modules/contact/contact_index.dart';
 
 class TabbedAppBarSample extends StatelessWidget {
   @override

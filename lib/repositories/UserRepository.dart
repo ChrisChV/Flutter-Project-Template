@@ -2,13 +2,11 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/models/UserModel.dart';
-import 'package:flutter_project_template/services/DocumentService.dart';
-import 'package:flutter_project_template/services/platforms/firebase/firebase.dart';
 import 'package:flutter_project_template/utils/constants/SizesConstants.dart';
-import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 import 'package:flutter_project_template/utils/constants/storage/StorageConstants.dart';
 import 'package:flutter_project_template/utils/constants/firestore/FirestoreConstants.dart';
@@ -16,6 +14,7 @@ import 'package:flutter_project_template/utils/constants/firestore/collections/D
 import 'package:flutter_project_template/utils/constants/firestore/collections/User.dart';
 import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_udid/flutter_udid.dart';
+import 'package:paulonia_document_service/paulonia_document_service.dart';
 import 'package:paulonia_utils/paulonia_utils.dart';
 import 'package:tuple/tuple.dart';
 
@@ -24,25 +23,27 @@ class UserRepository{
   static final CollectionReference _collectionReference =
             FirebaseFirestore.instance.collection(FirestoreCollections.USER_COLLECTION);
 
-  static final _storageReference = FirebaseService.getStorageReference([
-    StorageConstants.IMAGES_DIRECTORY_NAME,
-    StorageConstants.USER_DIRECTORY_NAME,
-  ]);
+  static final Reference _storageReference = FirebaseStorage.instance.ref()
+                          .child(StorageConstants.IMAGES_DIRECTORY_NAME)
+                          .child(StorageConstants.USER_DIRECTORY_NAME);
 
   /// Gets an User from a logged FirebaseUser
   ///
   /// Set [cache] to true if you want to get the user from cache.
   static Future<UserModel> getUserFromCredentials(User user, {bool cache = false}) async{
-    DocumentSnapshot userDoc = await DocumentService.getDoc(
-        _collectionReference.doc(user.uid),
-        cache);
+    DocumentSnapshot userDoc = await PauloniaDocumentService.getDoc(
+      _collectionReference.doc(user.uid),
+      cache
+    );
     if(!userDoc.exists) return null;
     return getByDocSnap(userDoc, user: user);
   }
 
   /// Get a user from a document snapshot
-  static UserModel getByDocSnap(DocumentSnapshot docSnap,
-      {User user}){
+  static UserModel getByDocSnap(
+    DocumentSnapshot docSnap, {
+    User user
+  }){
     int photoVersion = docSnap.get(UserCollectionNames.PHOTO_VERSION);
     return UserModel(
       id: docSnap.id,
@@ -62,12 +63,15 @@ class UserRepository{
   /// The [loginType] is used to get the image profile, that is different for
   /// each type of login.
   static Future<Tuple2<UserModel, FirstLogin>> getCreateUser(
-      User user, {
-      LoginType loginType = LoginType.EMAIL_LOGIN_TYPE
+    User user, {
+    LoginType loginType = LoginType.EMAIL_LOGIN_TYPE
   }) async{
     DocumentReference docRef = _collectionReference.doc(user.uid);
-    DocumentSnapshot docSnap = await DocumentService.getDoc(
-        docRef, false, forceServer: true);
+    DocumentSnapshot docSnap = await PauloniaDocumentService.getDoc(
+      docRef,
+      false,
+      forceServer: true
+    );
     if(docSnap == null) return null;
     bool firstLogin = !docSnap.exists;
     if(firstLogin){
@@ -121,7 +125,7 @@ class UserRepository{
       }
       else data[UserCollectionNames.PHOTO_VERSION] = -1;
       await docRef.set(data);
-      docSnap = await DocumentService.getDoc(docRef, false, forceServer: true);
+      docSnap = await PauloniaDocumentService.getDoc(docRef, false, forceServer: true);
     }
     UserModel resUser = getByDocSnap(docSnap, user: user);
     return Tuple2<UserModel, FirstLogin>(
@@ -176,7 +180,11 @@ class UserRepository{
   static Future<List<String>> getDevicesTokens(String uid) async{
     List<String> res = List();
     CollectionReference ref = _collectionReference.doc(uid).collection(FirestoreCollections.USER_DEVICES_COLLECTION);
-    QuerySnapshot query = await DocumentService.getAll(ref, false, forceServer: true);
+    QuerySnapshot query = await PauloniaDocumentService.getAll(
+      ref,
+      false,
+      forceServer: true
+    );
     if(query == null) return res;
     for(QueryDocumentSnapshot doc in query.docs){
       res.add(doc.get(DevicesCollectionNames.FCM_TOKEN));
@@ -206,15 +214,17 @@ class UserRepository{
     try{
       String profileFilename = StorageConstants.SMALL_PREFIX + StorageConstants.JPG_EXTENSION;
       String profileBigFilename = StorageConstants.BIG_PREFIX + StorageConstants.JPG_EXTENSION;
-      await FirebaseService.putFile(
-          _storageReference.child(uid).child(profileFilename),
-          profile,
-          StorageFileType.IMAGE_JPG
+      _storageReference.child(uid).child(profileFilename).putFile(
+        profile,
+        SettableMetadata(
+          contentType: 'image/jpg',
+        )
       );
-      await FirebaseService.putFile(
-          _storageReference.child(uid).child(profileBigFilename),
+      _storageReference.child(uid).child(profileBigFilename).putFile(
           profileBig,
-          StorageFileType.IMAGE_JPG
+          SettableMetadata(
+            contentType: 'image/jpg',
+          )
       );
       return true;
     }

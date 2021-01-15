@@ -16,6 +16,7 @@ class FCMService {
   static bool openInbox = false;
 
   static void initFCM(){
+    /*
     if (Platform.isIOS) {
       iosSubscription = _fcm.onIosSettingsRegistered.listen((data) {
         // save the token  OR subscribe to a topic here
@@ -37,6 +38,7 @@ class FCMService {
         print(message);
       },
     );
+     */
   }
 
   static Future<String> getFcmToken() async{

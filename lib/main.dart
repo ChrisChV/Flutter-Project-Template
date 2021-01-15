@@ -1,18 +1,19 @@
-import 'package:cache_image/cache_image.dart';
-import 'package:cache_image/hive_cache_image.dart';
 import 'package:catcher/catcher.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_project_template/services/ErrorService.dart';
+import 'package:flutter_project_template/routes/router.dart';
+import 'package:flutter_project_template/routes/routingConstants.dart';
 import 'package:flutter_project_template/services/FCMService.dart';
-import 'package:flutter_project_template/services/remoteConf/RCService.dart';
-import 'package:flutter_project_template/splashScreen.dart';
-import 'package:flutter_project_template/view_models/notifiers/implementations/AppUserNotifier.dart';
-import 'package:flutter_project_template/view_models/notifiers/implementations/ThemeNotifier.dart';
+import 'package:flutter_project_template/services/remoteConf/default_values.dart';
+import 'package:flutter_project_template/utils/constants/TimeConstants.dart';
+import 'package:flutter_project_template/utils/theme.dart';
 import 'package:device_preview/device_preview.dart';
-import 'package:hive/hive.dart';
+import 'package:flutter_project_template/view_models/controllers/AppUserController.dart';
+import 'package:get/get.dart';
+import 'package:paulonia_error_service/paulonia_error_service.dart';
+import 'package:paulonia_remote_conf/paulonia_remote_conf.dart';
+import 'package:paulonia_cache_image/paulonia_cache_image.dart';
 import 'package:paulonia_utils/paulonia_utils.dart';
-import 'package:provider/provider.dart';
 
 void main() async{
 
@@ -26,9 +27,12 @@ void main() async{
 
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  await RCService.initRemoteConf();
+  await PauloniaRemoteConf.init(
+      RCDefault.defaults,
+      expirationTimeInHours: TimeConstants.REMOTE_CONF_EXPIRATION_TIME_HOUR,
+  );
 
-  await CacheImage.init(proxy: "https://cors-anywhere.herokuapp.com/");
+  await PCacheImage.init(proxy: "https://cors-anywhere.herokuapp.com/");
 
   if(PUtils.isOnWeb()){
 
@@ -37,43 +41,20 @@ void main() async{
     FCMService.initFCM();
   }
 
-  Map<String, CatcherOptions> catcherConf = ErrorService.getCatcherConfig();
+  Map<String, CatcherOptions> catcherConf = PauloniaErrorService.getCatcherConfig();
 
-
-
-  // * Here you must initialize the providers of the app
-  var providers = [
-    ChangeNotifierProvider(create: (_) => AppUserNotifier(),),
-    ChangeNotifierProvider(create: (_) => ThemeNotifier(),),
-  ];
-
-  if (preview) {
-    runApp(DevicePreview(
-      builder: (context) => MultiProvider(
-        providers: providers,
-        child: MaterialAppWithTheme(
-          preview: preview,
+  Catcher(
+      rootWidget: DevicePreview(
+        enabled: preview,
+        builder: (context) => MaterialAppWithTheme(
           screenHeight: deviceHeight,
           screenWidth: deviceWidth,
         ),
       ),
-    ));
-  }
-  else {
-    Catcher(
-        MultiProvider(
-          providers: providers,
-          child: MaterialAppWithTheme(
-            preview: preview,
-            screenHeight: deviceHeight,
-            screenWidth: deviceWidth,
-          ),
-        ),
-        debugConfig: catcherConf['debug'],
-        releaseConfig: catcherConf['release'],
-        profileConfig: catcherConf['profile']
-    );
-  }
+      debugConfig: catcherConf['debug'],
+      releaseConfig: catcherConf['release'],
+      profileConfig: catcherConf['profile']
+  );
 
 }
 
@@ -81,13 +62,11 @@ void main() async{
 ///
 /// you can freely change the return in [build] function
 class MaterialAppWithTheme extends StatefulWidget {
-  bool preview;
   double screenWidth;
   double screenHeight;
 
   MaterialAppWithTheme({
     Key key,
-    this.preview,
     this.screenHeight,
     this.screenWidth,
   }) : super(key: key);
@@ -99,13 +78,20 @@ class MaterialAppWithTheme extends StatefulWidget {
 class _MaterialAppWithThemeState extends State<MaterialAppWithTheme> {
   @override
   Widget build(BuildContext context) {
-    ThemeNotifier themeNotifier = Provider.of<ThemeNotifier>(context);
-    return MaterialApp(
-      theme: themeNotifier.getTheme(),
-      home: SplashScreen(
-        screenWidth: widget.preview ? widget.screenWidth : null,
-        screenHeight: widget.preview ? widget.screenHeight : null,
-      ),
+    return GetMaterialApp(
+      showPerformanceOverlay: false,
+      debugShowCheckedModeBanner: false,
+      onInit: loadInitialControllers,
+      title: 'Flutter project template',
+      locale: DevicePreview.of(context).locale,
+      builder: DevicePreview.appBuilder,
+      getPages: UIRouter.listPages,
+      initialRoute: RouteNames.SplashRoute,
+      theme: CustomTheme.themeData
     );
   }
+}
+
+loadInitialControllers() {
+  Get.put(AppUserController(), permanent: true);
 }
