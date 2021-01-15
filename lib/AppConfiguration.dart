@@ -8,6 +8,6 @@ class AppConfiguration{
   static const String SENTRY_DSN_STRING = "";
   static const String FCM_POST_URL = "https://fcm.googleapis.com/fcm/send"; // No cambia
   static const String FCM_API_STRING = "";
-  static const String GS_BUCKET_URL = "";
+  static const String GS_BUCKET_URL = "gs://flutter-template-44674.appspot.com/";
 
 }

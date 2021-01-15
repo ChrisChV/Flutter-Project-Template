@@ -116,10 +116,11 @@ class UserRepository{
         UserCollectionNames.NAME: user.displayName,
         UserCollectionNames.CREATED: FieldValue.serverTimestamp(),
       };
-      if(loginType != LoginType.EMAIL_LOGIN_TYPE){
+      if(loginType != LoginType.EMAIL_LOGIN_TYPE && !PUtils.isOnWeb()){
+        /// TODO Test this part in web
         File profileFile = await Utils.getImageFromUrl(user.uid, photoUrl);
         File profileBigFile = await Utils.getImageFromUrl(user.uid + '_big', photoUrlBig);
-        bool state = await _updateProfileImages(user.uid, profileFile, profileBigFile);
+        bool state = await _updateProfileImages(user.uid, 1, profileFile, profileBigFile);
         if(!state) data[UserCollectionNames.PHOTO_VERSION] = -1;
         else data[UserCollectionNames.PHOTO_VERSION] = 1;
       }
@@ -143,11 +144,11 @@ class UserRepository{
     Map<String, dynamic> data = Map();
     if(name != null) data[UserCollectionNames.NAME] = name;
     if(profileImage != null){
-      bool state = await _updateProfileImage(user.id, profileImage);
-      if(!state) return null;
       int photoVersion = user.photoVersion;
       if(user.photoVersion < 0) photoVersion = photoVersion * -1 + 1;
       else photoVersion += 1;
+      bool state = await _updateProfileImage(user.id, photoVersion, profileImage);
+      if(!state) return null;
       data[UserCollectionNames.PHOTO_VERSION] = photoVersion;
     }
     if(data.isNotEmpty){
@@ -193,7 +194,11 @@ class UserRepository{
   }
 
   /// Compress, resize and uploads the profile image to Cloud Storage
-  static Future<bool> _updateProfileImage(String userId, File profileImage) async{
+  static Future<bool> _updateProfileImage(
+    String userId,
+    int photoVersion,
+    File profileImage
+  ) async{
     File profile = await FlutterNativeImage.compressImage(
       profileImage.path,
       quality: 70,
@@ -206,14 +211,16 @@ class UserRepository{
       targetWidth: SizesConstants.PROFILE_IMAGE_BIG_WIDTH,
       targetHeight: SizesConstants.PROFILE_IMAGE_BIG_HEIGHT,
     );
-    return _updateProfileImages(userId, profile, profileBig);
+    return _updateProfileImages(userId, photoVersion, profile, profileBig);
   }
 
   /// This function stores the profile images to Cloud Storage
-  static Future<bool> _updateProfileImages(String uid, File profile, File profileBig) async{
+  static Future<bool> _updateProfileImages(String uid, int photoVersion, File profile, File profileBig) async{
     try{
-      String profileFilename = StorageConstants.SMALL_PREFIX + StorageConstants.JPG_EXTENSION;
-      String profileBigFilename = StorageConstants.BIG_PREFIX + StorageConstants.JPG_EXTENSION;
+      String profileFilename = StorageConstants.SMALL_PREFIX + photoVersion.toString()
+                                  + StorageConstants.JPG_EXTENSION;
+      String profileBigFilename = StorageConstants.BIG_PREFIX + photoVersion.toString()
+                                  + StorageConstants.JPG_EXTENSION;
       _storageReference.child(uid).child(profileFilename).putFile(
         profile,
         SettableMetadata(
@@ -233,16 +240,31 @@ class UserRepository{
     }
   }
 
+  /// Gets the gs url for the profile image
   static String _getGsUrl(String userId, int photoVersion){
-    return AppConfiguration.GS_BUCKET_URL + StorageConstants.USER_DIRECTORY_NAME
-        + '/' + userId + '/' + StorageConstants.SMALL_PREFIX + '_'
-        + photoVersion.toString() + StorageConstants.JPG_EXTENSION;
+    if(photoVersion > 0){
+      return AppConfiguration.GS_BUCKET_URL + StorageConstants.IMAGES_DIRECTORY_NAME
+          + '/' + StorageConstants.USER_DIRECTORY_NAME
+          + '/' + userId + '/' + StorageConstants.SMALL_PREFIX
+          + photoVersion.toString() + StorageConstants.JPG_EXTENSION;
+    }
+    return AppConfiguration.GS_BUCKET_URL + StorageConstants.IMAGES_DIRECTORY_NAME
+          + '/' + StorageConstants.DEFAULT_DIRECTORY_NAME
+          + '/' + StorageConstants.DEFAULT_USER + StorageConstants.JPG_EXTENSION;
   }
 
+  /// Gets the gs url for the big profile image
   static String _getBigGsUrl(String userId, int photoVersion){
-    return AppConfiguration.GS_BUCKET_URL + StorageConstants.USER_DIRECTORY_NAME
-        + '/' + userId + '/' + StorageConstants.BIG_PREFIX + '_'
-        + photoVersion.toString() + StorageConstants.JPG_EXTENSION;
+    if(photoVersion > 0){
+      return AppConfiguration.GS_BUCKET_URL + StorageConstants.IMAGES_DIRECTORY_NAME
+          + '/' + StorageConstants.USER_DIRECTORY_NAME
+          + '/' + userId + '/' + StorageConstants.BIG_PREFIX
+          + photoVersion.toString() + StorageConstants.JPG_EXTENSION;
+    }
+    return AppConfiguration.GS_BUCKET_URL + StorageConstants.IMAGES_DIRECTORY_NAME
+        + '/' + StorageConstants.DEFAULT_DIRECTORY_NAME
+        + '/' + StorageConstants.DEFAULT_USER_BIG + StorageConstants.JPG_EXTENSION;
+
   }
 
 }

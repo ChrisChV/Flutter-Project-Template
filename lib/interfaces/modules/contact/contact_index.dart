@@ -9,8 +9,6 @@ class Contact extends StatelessWidget{
 
   @override
   Widget build(BuildContext context){
-    print("AAAAAAAAA");
-    print(PauloniaRemoteConf.get(KeyNames.CONTACT_URL, PRCType.STRING));
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

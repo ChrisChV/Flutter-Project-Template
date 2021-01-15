@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_project_template/utils/constants/enums/UserEnums.dart';
 import 'package:flutter_project_template/view_models/controllers/AppUserController.dart';
 import 'package:get/get.dart';
+import 'package:paulonia_cache_image/paulonia_cache_image.dart';
 
 class Login extends StatefulWidget{
 
@@ -24,7 +25,15 @@ class _LoginState extends State<Login>{
         children: <Widget>[
           GetBuilder<AppUserController>(
             builder: (controller){
-              if(controller.isLoggedIn()) return Text(controller.appUser.name);
+              if(controller.isLoggedIn()){
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image(image: PCacheImage(controller.appUser.gsUrl)),
+                    Text(controller.appUser.name),
+                  ],
+                );
+              }
               else return Text('Not logged in');
             }
           ),
