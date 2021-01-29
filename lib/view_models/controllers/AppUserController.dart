@@ -30,16 +30,16 @@ class AppUserController extends GetxController{
   /// Gets the session of the logged user
   ///
   /// * This function have to be called on start of the app
-  Future<NotifierState> initialVerification({
+  Future<ControllerState> initialVerification({
     bool notify = true
   }) async{
     _supportsAppleSignIn = await PUtils.supportsAppleSignIn();
     User user = AuthService.initialVerification();
-    if(user == null) return NotifierState.SUCCESS;
+    if(user == null) return ControllerState.SUCCESS;
     _appUser = await UserRepository.getUserFromCredentials(user, cache: false);
     if(_appUser == null) AuthService.signOut();
     else if(notify) update();
-    return NotifierState.SUCCESS;
+    return ControllerState.SUCCESS;
   }
 
   /// Sign In with email and password
@@ -188,12 +188,12 @@ class AppUserController extends GetxController{
   }
 
   /// Sign Out the session of the user.
-  Future<NotifierState> signOut({bool notify = true}) async{
+  Future<ControllerState> signOut({bool notify = true}) async{
     AuthService.signOut();
     _appUser = null;
     _firstLogin = FirstLogin.FALSE;
     if(notify) update();
-    return NotifierState.SUCCESS;
+    return ControllerState.SUCCESS;
   }
 
 

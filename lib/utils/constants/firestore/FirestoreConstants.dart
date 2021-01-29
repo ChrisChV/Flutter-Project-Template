@@ -2,6 +2,7 @@ class FirestoreCollections{
 
   static const String USER_COLLECTION = 'user';
   static const String USER_DEVICES_COLLECTION = 'devices';
+  static const String ARTICLE_COLLECTION = 'article';
 
 }
 

@@ -1,13 +1,14 @@
 import 'package:catcher/catcher.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_project_template/repo_setup.dart';
 import 'package:flutter_project_template/routes/router.dart';
 import 'package:flutter_project_template/routes/routingConstants.dart';
-import 'package:flutter_project_template/services/FCMService.dart';
 import 'package:flutter_project_template/services/remoteConf/default_values.dart';
 import 'package:flutter_project_template/utils/constants/TimeConstants.dart';
 import 'package:flutter_project_template/utils/theme.dart';
 import 'package:flutter_project_template/view_models/controllers/AppUserController.dart';
+import 'package:flutter_project_template/view_models/controllers/ArticleController.dart';
 import 'package:get/get.dart';
 import 'package:paulonia_error_service/paulonia_error_service.dart';
 import 'package:paulonia_remote_conf/paulonia_remote_conf.dart';
@@ -24,8 +25,11 @@ void main() async{
   double deviceWidth = 800;
   double deviceHeight = 1280;
 
+
+
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  RepoSetup().init();
   await PauloniaRemoteConf.init(
       RCDefault.defaults,
       expirationTimeInHours: TimeConstants.REMOTE_CONF_EXPIRATION_TIME_HOUR,
@@ -86,6 +90,7 @@ class _MaterialAppWithThemeState extends State<MaterialAppWithTheme> {
   }
 }
 
-loadInitialControllers() {
-  Get.put(AppUserController(), permanent: true);
-}
+  loadInitialControllers() {
+    Get.put(AppUserController(), permanent: true);
+    Get.put(ArticleController(), permanent: true);
+  }
