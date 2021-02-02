@@ -1,4 +1,4 @@
-import 'package:flutter_project_template/pack/PauloniaModel.dart';
+import 'package:paulonia_repository/PauloniaModel.dart';
 
 class ArticleModel implements PauloniaModel<String>{
 

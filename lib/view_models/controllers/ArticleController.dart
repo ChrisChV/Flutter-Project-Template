@@ -14,15 +14,25 @@ class ArticleController extends GetxController{
     super.onInit();
   }
 
-  Future<ControllerState> loadArticle({bool notify = true}) async{
-    _articles = List();
-    _articles.addAll(await _repository.getFromIdList(["Cl6vRq0QZVQEjL79D9PX", "ijnzWzeO3jncXLaBxHyi"], notify: true));
+  /// Load the first articles of the pagination
+  Future<ControllerState> loadFirstArticles({bool notify = true}) async{
+    _articles = await _repository.getArticles(resetPagination: true);
+    if(notify) update();
+    return ControllerState.SUCCESS;
+  }
+
+  /// Load the next articles of the pagination
+  Future<ControllerState> loadNextArticles({bool notify = true}) async{
+    List<ArticleModel> newArticles = await _repository.getArticles(notify: true);
+    if(newArticles.isEmpty) return ControllerState.SUCCESS_EMPTY;
+    _articles.addAll(newArticles);
+    if(notify) update();
     return ControllerState.SUCCESS;
   }
 
 
   void _updateRepo(List<String> updatedIds){
-    print("AAAAAAAAAAAAAAAAAa");
+    print("This is a little test. The updated ids are:");
     print(updatedIds);
   }
 
