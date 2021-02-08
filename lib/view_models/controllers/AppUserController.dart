@@ -21,6 +21,11 @@ class AppUserController extends GetxController{
   /// Verifies if the device supports Apple Sign In
   bool get supportsAppleSignIn => _supportsAppleSignIn;
 
+  @override
+  void onInit(){
+    _repository = Get.find();
+    super.onInit();
+  }
 
   /// Verify if there is a user session is active
   bool isLoggedIn(){
@@ -36,7 +41,7 @@ class AppUserController extends GetxController{
     _supportsAppleSignIn = await PUtils.supportsAppleSignIn();
     User user = AuthService.initialVerification();
     if(user == null) return ControllerState.SUCCESS;
-    _appUser = await UserRepository.getUserFromCredentials(user, cache: false);
+    _appUser = await _repository.getUserFromCredentials(user, cache: false);
     if(_appUser == null) AuthService.signOut();
     else if(notify) update();
     return ControllerState.SUCCESS;
@@ -51,7 +56,7 @@ class AppUserController extends GetxController{
       }
       User user = await AuthService.emailPasswordSignIn(email, password);
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
-      _appUser = await UserRepository.getUserFromCredentials(user);
+      _appUser = await _repository.getUserFromCredentials(user);
       if(_appUser == null){
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
@@ -77,7 +82,7 @@ class AppUserController extends GetxController{
       }
       User user = await AuthService.emailPasswordSignUp(email, password, name);
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
-      Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
+      Tuple2<UserModel, FirstLogin> result = await _repository.getCreateUser(
           user, loginType: LoginType.EMAIL_LOGIN_TYPE
       );
       _appUser = result.item1;
@@ -107,7 +112,7 @@ class AppUserController extends GetxController{
       }
       User user = await AuthService.googleSignIn();
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
-      Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
+      Tuple2<UserModel, FirstLogin> result = await _repository.getCreateUser(
           user, loginType: LoginType.GMAIL_LOGIN_TYPE);
       _appUser = result.item1;
       _firstLogin = result.item2;
@@ -169,7 +174,7 @@ class AppUserController extends GetxController{
       }
       User user = await AuthService.appleSignIn();
       if(user == null) return LoginState.ERROR_BAD_LOGIN;
-      Tuple2<UserModel, FirstLogin> result = await UserRepository.getCreateUser(
+      Tuple2<UserModel, FirstLogin> result = await _repository.getCreateUser(
           user, loginType: LoginType.EMAIL_LOGIN_TYPE);
       _appUser = result.item1;
       _firstLogin = result.item2;
@@ -202,5 +207,6 @@ class AppUserController extends GetxController{
   UserModel _appUser;
   bool _supportsAppleSignIn = false;
   FirstLogin _firstLogin = FirstLogin.FALSE;
+  UserRepository _repository;
 
 }

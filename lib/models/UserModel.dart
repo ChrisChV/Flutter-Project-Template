@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:paulonia_repository/PauloniaModel.dart';
 
-class UserModel{
+class UserModel implements PauloniaModel<String>{
 
+  @override
   String id;
   String name;
   String gsUrl;
@@ -9,6 +11,9 @@ class UserModel{
   User firebaseUser; // Here is other information like email only when is logged
 
   int photoVersion; // Only for backend
+
+  @override
+  DateTime created;
 
   UserModel({
     this.id,

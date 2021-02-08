@@ -15,32 +15,37 @@ import 'package:flutter_project_template/utils/constants/firestore/collections/U
 import 'package:flutter_project_template/utils/utils.dart';
 import 'package:flutter_udid/flutter_udid.dart';
 import 'package:paulonia_document_service/paulonia_document_service.dart';
+import 'package:paulonia_repository/PauloniaRepository.dart';
 import 'package:paulonia_utils/paulonia_utils.dart';
 import 'package:tuple/tuple.dart';
 
-class UserRepository{
+class UserRepository extends PauloniaRepository<String, UserModel>{
 
-  static final CollectionReference _collectionReference =
+  @override
+  CollectionReference get collectionReference => _collectionReference;
+
+  CollectionReference _collectionReference =
             FirebaseFirestore.instance.collection(FirestoreCollections.USER_COLLECTION);
 
-  static final Reference _storageReference = FirebaseStorage.instance.ref()
+  Reference _storageReference = FirebaseStorage.instance.ref()
                           .child(StorageConstants.IMAGES_DIRECTORY_NAME)
                           .child(StorageConstants.USER_DIRECTORY_NAME);
 
   /// Gets an User from a logged FirebaseUser
   ///
   /// Set [cache] to true if you want to get the user from cache.
-  static Future<UserModel> getUserFromCredentials(User user, {bool cache = false}) async{
+  Future<UserModel> getUserFromCredentials(User user, {bool cache = false}) async{
     DocumentSnapshot userDoc = await PauloniaDocumentService.getDoc(
       _collectionReference.doc(user.uid),
       cache
     );
     if(!userDoc.exists) return null;
-    return getByDocSnap(userDoc, user: user);
+    return getFromDocSnap(userDoc, user: user);
   }
 
   /// Get a user from a document snapshot
-  static UserModel getByDocSnap(
+  @override
+  UserModel getFromDocSnap(
     DocumentSnapshot docSnap, {
     User user
   }){
@@ -62,7 +67,7 @@ class UserRepository{
   /// If the user does not exist in the database, then this function creates it.
   /// The [loginType] is used to get the image profile, that is different for
   /// each type of login.
-  static Future<Tuple2<UserModel, FirstLogin>> getCreateUser(
+  Future<Tuple2<UserModel, FirstLogin>> getCreateUser(
     User user, {
     LoginType loginType = LoginType.EMAIL_LOGIN_TYPE
   }) async{
@@ -128,7 +133,7 @@ class UserRepository{
       await docRef.set(data);
       docSnap = await PauloniaDocumentService.getDoc(docRef, false, forceServer: true);
     }
-    UserModel resUser = getByDocSnap(docSnap, user: user);
+    UserModel resUser = getFromDocSnap(docSnap, user: user);
     return Tuple2<UserModel, FirstLogin>(
       resUser,
       firstLogin ? FirstLogin.TRUE : FirstLogin.FALSE,
@@ -136,7 +141,7 @@ class UserRepository{
   }
 
   /// This function updates a user
-  static Future<Map<String, dynamic>> updateUser(
+  Future<Map<String, dynamic>> updateUser(
     UserModel user, {
     String name,
     File profileImage
@@ -159,7 +164,7 @@ class UserRepository{
   }
 
 
-  static Future<void> updateDevice(String uid) async{
+  Future<void> updateDevice(String uid) async{
     // TODO FCM
     String deviceId = await FlutterUdid.udid;
     //String token = await FCM.getFcmToken();
@@ -171,14 +176,14 @@ class UserRepository{
     });
   }
 
-  static Future<void> deleteDevice(String uid) async{
+  Future<void> deleteDevice(String uid) async{
     String deviceId = await FlutterUdid.udid;
     _collectionReference.doc(uid)
         .collection(FirestoreCollections.USER_DEVICES_COLLECTION)
         .doc(deviceId).delete();
   }
 
-  static Future<List<String>> getDevicesTokens(String uid) async{
+  Future<List<String>> getDevicesTokens(String uid) async{
     List<String> res = List();
     CollectionReference ref = _collectionReference.doc(uid).collection(FirestoreCollections.USER_DEVICES_COLLECTION);
     QuerySnapshot query = await PauloniaDocumentService.getAll(
@@ -194,7 +199,7 @@ class UserRepository{
   }
 
   /// Compress, resize and uploads the profile image to Cloud Storage
-  static Future<bool> _updateProfileImage(
+  Future<bool> _updateProfileImage(
     String userId,
     int photoVersion,
     File profileImage
@@ -215,7 +220,7 @@ class UserRepository{
   }
 
   /// This function stores the profile images to Cloud Storage
-  static Future<bool> _updateProfileImages(String uid, int photoVersion, File profile, File profileBig) async{
+  Future<bool> _updateProfileImages(String uid, int photoVersion, File profile, File profileBig) async{
     try{
       String profileFilename = StorageConstants.SMALL_PREFIX + photoVersion.toString()
                                   + StorageConstants.JPG_EXTENSION;
@@ -241,7 +246,7 @@ class UserRepository{
   }
 
   /// Gets the gs url for the profile image
-  static String _getGsUrl(String userId, int photoVersion){
+  String _getGsUrl(String userId, int photoVersion){
     if(photoVersion > 0){
       return AppConfiguration.GS_BUCKET_URL + StorageConstants.IMAGES_DIRECTORY_NAME
           + '/' + StorageConstants.USER_DIRECTORY_NAME
@@ -254,7 +259,7 @@ class UserRepository{
   }
 
   /// Gets the gs url for the big profile image
-  static String _getBigGsUrl(String userId, int photoVersion){
+  String _getBigGsUrl(String userId, int photoVersion){
     if(photoVersion > 0){
       return AppConfiguration.GS_BUCKET_URL + StorageConstants.IMAGES_DIRECTORY_NAME
           + '/' + StorageConstants.USER_DIRECTORY_NAME

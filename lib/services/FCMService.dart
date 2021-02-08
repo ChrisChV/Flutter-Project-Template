@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_project_template/AppConfiguration.dart';
 import 'package:flutter_project_template/repositories/UserRepository.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 
 class FCMService {
@@ -51,7 +52,7 @@ class FCMService {
       String title,
       String body,
       {Map<String, dynamic> extraData} ) async{
-    List<String> tokenDevices = await UserRepository.getDevicesTokens(destUid);
+    List<String> tokenDevices = await Get.find<UserRepository>().getDevicesTokens(destUid);
     var random = new Random();
     if(tokenDevices.isEmpty) return;
     for(String token in tokenDevices){
