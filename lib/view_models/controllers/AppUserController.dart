@@ -43,12 +43,19 @@ class AppUserController extends GetxController{
     if(user == null) return ControllerState.SUCCESS;
     _appUser = await _repository.getUserFromCredentials(user, cache: false);
     if(_appUser == null) AuthService.signOut();
-    else if(notify) update();
+    else {
+      if (notify) update();
+      await _loginSuccess(initialVerification: true);
+    }
     return ControllerState.SUCCESS;
   }
 
   /// Sign In with email and password
-  Future<LoginState> emailPasswordSignIn(String email, String password) async{
+  Future<LoginState> emailPasswordSignIn(
+    String email,
+    String password, {
+    bool notify = true,
+  }) async{
     try{
       if(_appUser != null){
         PauloniaErrorService.sendError(BadLoginException());
@@ -61,7 +68,8 @@ class AppUserController extends GetxController{
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      update();
+      await _loginSuccess();
+      if(notify) update();
       return LoginState.SUCCESS;
     }
     catch(state){
@@ -74,7 +82,12 @@ class AppUserController extends GetxController{
   /// Sign Up with email and password
   ///
   /// It sends and email verification.
-  Future<LoginState> emailPasswordSignUp(String email, String password, String name) async{
+  Future<LoginState> emailPasswordSignUp(
+    String email,
+    String password,
+    String name, {
+    bool notify = true,
+  }) async{
     try{
       if(_appUser != null){
         PauloniaErrorService.sendError(BadLoginException());
@@ -91,7 +104,8 @@ class AppUserController extends GetxController{
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      update();
+      if(notify) update();
+      await _loginSuccess();
       return LoginState.SUCCESS;
     }
     catch(state){
@@ -104,7 +118,7 @@ class AppUserController extends GetxController{
   /// Function that has the functionality of Sign In and Sign Up with Google
   ///
   /// With Google, email verification is not necessary.
-  Future<LoginState> googleSignIn() async{
+  Future<LoginState> googleSignIn({bool notify = true}) async{
     try{
       if(_appUser != null){
         PauloniaErrorService.sendError(BadLoginException());
@@ -121,6 +135,7 @@ class AppUserController extends GetxController{
         return LoginState.ERROR_BAD_LOGIN;
       }
       update();
+      await _loginSuccess();
       return LoginState.SUCCESS;
     }
     catch(state){
@@ -134,7 +149,7 @@ class AppUserController extends GetxController{
   ///
   /// If is the first login, then it sends an email verification.
   /*
-  Future<LoginState> facebookSignIn() async{
+  Future<LoginState> facebookSignIn({bool notify = true}) async{
     try{
       if(_appUser != null){
         PauloniaErrorService.sendError(BadLoginException());
@@ -153,7 +168,8 @@ class AppUserController extends GetxController{
       if(result.item2 == FirstLogin.TRUE){
         AuthService.sendEmailVerification(_appUser.firebaseUser);
       }
-      update();
+      if(notify) update();
+      await _loginSuccess();
       return LoginState.SUCCESS;
     }
     catch(state){
@@ -166,7 +182,7 @@ class AppUserController extends GetxController{
 
 
   /// Function that has the functionality of Sign In and Sign Up with Apple
-  Future<LoginState> appleSignIn() async{
+  Future<LoginState> appleSignIn({bool notify = true}) async{
     try{
       if(_appUser != null){
         PauloniaErrorService.sendError(BadLoginException());
@@ -182,7 +198,8 @@ class AppUserController extends GetxController{
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      update();
+      if(notify) update();
+      await _loginSuccess();
       return LoginState.SUCCESS;
     }
     catch(state){
@@ -197,10 +214,17 @@ class AppUserController extends GetxController{
     AuthService.signOut();
     _appUser = null;
     _firstLogin = FirstLogin.FALSE;
+
+    /// Here put all clear functions of the controllers
+
     if(notify) update();
     return ControllerState.SUCCESS;
   }
 
+  /// Function that calls all the necessary after a success login
+  Future<void> _loginSuccess({bool initialVerification = false}) async{
+    /// Here make that in a success login
+  }
 
   /// Private stuff
 
