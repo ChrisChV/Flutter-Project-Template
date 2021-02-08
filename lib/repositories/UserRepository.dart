@@ -220,24 +220,26 @@ class UserRepository extends PauloniaRepository<String, UserModel>{
   }
 
   /// This function stores the profile images to Cloud Storage
-  Future<bool> _updateProfileImages(String uid, int photoVersion, File profile, File profileBig) async{
+  Future<bool> _updateProfileImages(String userId, int photoVersion, File profile, File profileBig) async{
     try{
       String profileFilename = StorageConstants.SMALL_PREFIX + photoVersion.toString()
                                   + StorageConstants.JPG_EXTENSION;
       String profileBigFilename = StorageConstants.BIG_PREFIX + photoVersion.toString()
                                   + StorageConstants.JPG_EXTENSION;
-      _storageReference.child(uid).child(profileFilename).putFile(
-        profile,
-        SettableMetadata(
-          contentType: 'image/jpg',
-        )
+      UploadTask taskProfile = _storageReference.child(userId).child(profileFilename).putFile(
+          profile,
+          SettableMetadata(
+            contentType: 'image/jpg',
+          )
       );
-      _storageReference.child(uid).child(profileBigFilename).putFile(
+      UploadTask taskProfileBig = _storageReference.child(userId).child(profileBigFilename).putFile(
           profileBig,
           SettableMetadata(
             contentType: 'image/jpg',
           )
       );
+      await taskProfile.whenComplete(() => null);
+      await taskProfileBig.whenComplete(() => null);
       return true;
     }
     catch(error){
