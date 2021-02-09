@@ -165,9 +165,6 @@ class AppUserController extends GetxController{
         AuthService.signOut();
         return LoginState.ERROR_BAD_LOGIN;
       }
-      if(result.item2 == FirstLogin.TRUE){
-        AuthService.sendEmailVerification(_appUser.firebaseUser);
-      }
       if(notify) update();
       await _loginSuccess();
       return LoginState.SUCCESS;

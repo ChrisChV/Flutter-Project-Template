@@ -178,7 +178,7 @@ class UserRepository extends PauloniaRepository<String, UserModel>{
 
   Future<void> deleteDevice(String uid) async{
     String deviceId = await FlutterUdid.udid;
-    _collectionReference.doc(uid)
+    await _collectionReference.doc(uid)
         .collection(FirestoreCollections.USER_DEVICES_COLLECTION)
         .doc(deviceId).delete();
   }
