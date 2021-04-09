@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_project_template/services/remoteConf/KeyNames.dart';
 import 'package:flutter_project_template/view_models/controllers/ArticleController.dart';
+import 'package:flutter_project_template/view_models/controllers/OtherArticleController.dart';
 import 'package:get/get.dart';
 import 'package:paulonia_remote_conf/constants.dart';
 import 'package:paulonia_remote_conf/paulonia_remote_conf.dart';
@@ -41,6 +42,18 @@ class Contact extends StatelessWidget{
               for(var tt in Get.find<ArticleController>().articles){
                 print(tt.content);
               }
+            },
+          ),
+          MaterialButton(
+            child: Text('Print first controller'),
+            onPressed: (){
+              Get.find<ArticleController>().printAll();
+            },
+          ),
+          MaterialButton(
+            child: Text('Print second controller'),
+            onPressed: (){
+              Get.find<OtherArticleController>().printAll();
             },
           )
         ],

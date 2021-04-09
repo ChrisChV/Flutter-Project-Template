@@ -516,9 +516,11 @@ packages:
   paulonia_repository:
     dependency: "direct main"
     description:
-      name: paulonia_repository
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "."
+      ref: dev
+      resolved-ref: "29d12c1356434312b3acde1cae747004dc8c8205"
+      url: "https://github.com/PauloniaAQP/paulonia_repository"
+    source: git
     version: "0.0.1"
   paulonia_utils:
     dependency: "direct main"

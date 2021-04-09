@@ -4,6 +4,7 @@ import 'package:flutter_project_template/utils/constants/firestore/FirestoreCons
 import 'package:flutter_project_template/utils/constants/firestore/collections/Article.dart';
 import 'package:paulonia_document_service/paulonia_document_service.dart';
 import 'package:paulonia_repository/PauloniaRepository.dart';
+import 'package:paulonia_repository/RepoUpdate.dart';
 
 class ArticleRepository extends PauloniaRepository<String, ArticleModel>{
 
@@ -42,9 +43,11 @@ class ArticleRepository extends PauloniaRepository<String, ArticleModel>{
     QuerySnapshot queryRes = await PauloniaDocumentService.runQuery(query, cache);
     if(queryRes.docs.isEmpty) return [];
     _articlePagination = queryRes.docs.last;
-    return getFromDocSnapList(queryRes.docs);
+    List<ArticleModel> res = await getFromDocSnapList(queryRes.docs);
+    addInRepository(res);
+    if(notify) update(RepoUpdateType.get, models: res);
+    return res;
   }
-
 
 
 

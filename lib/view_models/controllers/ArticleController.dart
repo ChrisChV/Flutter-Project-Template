@@ -2,6 +2,7 @@ import 'package:flutter_project_template/models/ArticleModel.dart';
 import 'package:flutter_project_template/repositories/ArticleRepository.dart';
 import 'package:flutter_project_template/utils/constants/enums/AppEnums.dart';
 import 'package:get/get.dart';
+import 'package:paulonia_repository/RepoUpdate.dart';
 
 class ArticleController extends GetxController{
 
@@ -9,6 +10,7 @@ class ArticleController extends GetxController{
 
   @override
   void onInit() {
+    print('ArticleController init');
     _repository = Get.find();
     _repository.addListener(_updateRepo);
     super.onInit();
@@ -30,10 +32,16 @@ class ArticleController extends GetxController{
     return ControllerState.SUCCESS;
   }
 
+  void printAll(){
+    print(_repository.repositoryMap.keys.toList());
+  }
 
-  void _updateRepo(List<String> updatedIds){
+  void _updateRepo(List<RepoUpdate<String>> updatedIds){
     print("This is a little test. The updated ids are:");
-    print(updatedIds);
+    for(var tt in updatedIds){
+      print(tt.modelId);
+      print(tt.type);
+    }
   }
 
   List<ArticleModel> _articles;
